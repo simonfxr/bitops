@@ -2,12 +2,18 @@
 #define BO_CXX_HPP
 
 #include <bo/c.h>
+#include <hu.h>
 #include <type_traits>
 
 namespace bo {
 
-#define BO_ULONG_BITS 64
-#define BO_ULONG_CALL(fn) BO_CAT(BO_CAT(fn, _u), BO_ULONG_BITS)
+#if HU_SIZEOF_LONG == 4
+#    define BO_ULONG_CALL(fn) BO_CAT(fn, _u32)
+#else
+#    define BO_ULONG_CALL(fn) BO_CAT(fn, _u64)
+#endif
+
+typedef unsigned long long bo_ull_t;
 
 BO_INTRIN_API(BO_POPCNT_U8_CEXPR_P)
 int
@@ -39,9 +45,14 @@ popcnt(unsigned int x)
 
 BO_INTRIN_API(BO_POPCNT_U64_CEXPR_P)
 int
-popcnt(unsigned long x){ return BO_ULONG_CALL(bo_popcnt)(x) }
+popcnt(unsigned long x)
+{
+    return BO_ULONG_CALL(bo_popcnt)(x);
+}
 
-BO_INTRIN_API(BO_POPCNT_U64_CEXPR_P) int popcnt(unsigned long long x)
+BO_INTRIN_API(BO_POPCNT_U64_CEXPR_P)
+int
+popcnt(bo_ull_t x)
 {
     return bo_popcnt_u64(x);
 }
@@ -76,10 +87,14 @@ bswap(unsigned int x)
 
 BO_INTRIN_API(BO_BSWAP_U64_CEXPR_P)
 unsigned long
-bswap(unsigned long x){ return BO_ULONG_CALL(bo_bswap)(x) }
+bswap(unsigned long x)
+{
+    return BO_ULONG_CALL(bo_bswap)(x);
+}
 
-BO_INTRIN_API(BO_BSWAP_U64_CEXPR_P) unsigned long long bswap(
-  unsigned long long x)
+BO_INTRIN_API(BO_BSWAP_U64_CEXPR_P)
+bo_ull_t
+bswap(bo_ull_t x)
 {
     return bo_bswap_u64(x);
 }
@@ -114,9 +129,14 @@ rev(unsigned int x)
 
 BO_INTRIN_API(BO_REV_U64_CEXPR_P)
 unsigned long
-rev(unsigned long x){ return BO_ULONG_CALL(bo_rev)(x) }
+rev(unsigned long x)
+{
+    return BO_ULONG_CALL(bo_rev)(x);
+}
 
-BO_INTRIN_API(BO_REV_U64_CEXPR_P) unsigned long long rev(unsigned long long x)
+BO_INTRIN_API(BO_REV_U64_CEXPR_P)
+bo_ull_t
+rev(bo_ull_t x)
 {
     return bo_rev_u64(x);
 }

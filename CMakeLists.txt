@@ -29,4 +29,5 @@ if(SFX_BO_STANDALONE_PROJECT)
   endmacro()
 
   sfx_bo_add_test(main main.c)
+  sfx_bo_add_test(main-cxx main-cxx.cpp)
 endif()
