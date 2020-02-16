@@ -8,12 +8,24 @@
 #define BO_Q(...) (__VA_ARGS__)
 #define BO_NIL /* empty */
 
-#define BO_inline static inline
-
 #define BO_DEF_ALL(DEF) DEF(8) DEF(16) DEF(32) DEF(64)
 
+#if defined(__cplusplus)
+#    if __cplusplus >= 201402L
+#        define BO_PTBL_CEXPR_P 1
+#        define BO_cexpr constexpr
+#    endif
+#endif
+
+#ifndef BO_cexpr
+#    define BO_PTBL_CEXPR_P 0
+#    define BO_cexpr static inline
+#endif
+
+#define BO_PTBL_API /*inline*/ BO_cexpr
+
 #define BO_DEF_I_FWD(W, nm)                                                    \
-    BO_inline int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x)                     \
+    BO_PTBL_API int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x)                   \
     {                                                                          \
         return (int##W##_t) bo_ptbl_##nm##_u##W((uint##W##_t) x);              \
     }
@@ -23,7 +35,7 @@
     DEF(16, __VA_ARGS__) DEF(32, __VA_ARGS__) DEF(64, __VA_ARGS__)
 
 #define BO_DEF_PTBL_POPCNT(W)                                                  \
-    BO_inline int bo_ptbl_popcnt_u##W(uint##W##_t x)                           \
+    BO_PTBL_API int bo_ptbl_popcnt_u##W(uint##W##_t x)                         \
     {                                                                          \
         int n = 0;                                                             \
         for (; x != 0; x &= x - 1)                                             \
@@ -31,7 +43,7 @@
         return n;                                                              \
     }                                                                          \
                                                                                \
-    BO_inline int bo_ptbl_popcnt_i##W(int##W##_t x)                            \
+    BO_PTBL_API int bo_ptbl_popcnt_i##W(int##W##_t x)                          \
     {                                                                          \
         return bo_ptbl_popcnt_u##W((uint##W##_t) x);                           \
     }
@@ -41,7 +53,7 @@ BO_DEF_ALL(BO_DEF_PTBL_POPCNT)
 #undef BO_DEF_PTBL_POPCNT
 
 #define BO_DEF_ROL(W)                                                          \
-    BO_inline uint##W##_t bo_ptbl_rol_u##W(uint##W##_t x, int n)               \
+    BO_PTBL_API uint##W##_t bo_ptbl_rol_u##W(uint##W##_t x, int n)             \
     {                                                                          \
         n &= W - 1;                                                            \
         return (x << n) | (x >> ((-n) & (W - 1)));                             \
@@ -52,7 +64,7 @@ BO_DEF_ALL(BO_DEF_ROL)
 #undef BO_DEF_ROL
 
 #define BO_DEF_I_FWD_I(W, nm)                                                  \
-    BO_inline int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x, int n)              \
+    BO_PTBL_API int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x, int n)            \
     {                                                                          \
         return (int##W##_t) bo_ptbl_##nm##_u##W((uint##W##_t) x, n);           \
     }
@@ -60,7 +72,7 @@ BO_DEF_ALL(BO_DEF_ROL)
 BO_DEF_ALL_1(BO_DEF_I_FWD_I, rol)
 
 #define BO_DEF_ROR(W)                                                          \
-    BO_inline uint##W##_t bo_ptbl_ror_u##W(uint##W##_t x, int n)               \
+    BO_PTBL_API uint##W##_t bo_ptbl_ror_u##W(uint##W##_t x, int n)             \
     {                                                                          \
         n &= W - 1;                                                            \
         return (x >> n) | (x << ((-n) & (W - 1)));                             \
@@ -72,26 +84,26 @@ BO_DEF_ALL(BO_DEF_ROR)
 
 BO_DEF_ALL_1(BO_DEF_I_FWD_I, ror)
 
-BO_inline uint8_t
+BO_PTBL_API uint8_t
 bo_ptbl_bswap_u8(uint8_t x)
 {
     return x;
 }
 
-BO_inline uint16_t
+BO_PTBL_API uint16_t
 bo_ptbl_bswap_u16(uint16_t x)
 {
     return bo_ptbl_rol_u16(x, 8);
 }
 
-BO_inline uint32_t
+BO_PTBL_API uint32_t
 bo_ptbl_bswap_u32(uint32_t x)
 {
     x = ((x & 0x00FF00FF) << 8) | ((x >> 8) & 0x00FF00FF);
     return bo_ptbl_rol_u32(x, 16);
 }
 
-BO_inline uint64_t
+BO_PTBL_API uint64_t
 bo_ptbl_bswap_u64(uint64_t x)
 {
     x = ((x & 0x00FF00FF00FF00FF) << 8) | ((x >> 8) & 0x00FF00FF00FF00FF);
@@ -101,7 +113,7 @@ bo_ptbl_bswap_u64(uint64_t x)
 
 BO_DEF_ALL_1(BO_DEF_I_FWD, bswap)
 
-BO_inline uint8_t
+BO_PTBL_API uint8_t
 bo_ptbl_rev_u8(uint8_t x)
 {
     x = ((x & 0x55) << 1) | ((x >> 1) & 0x55);
@@ -109,7 +121,7 @@ bo_ptbl_rev_u8(uint8_t x)
     return bo_ptbl_rol_u8(x, 4);
 }
 
-BO_inline uint16_t
+BO_PTBL_API uint16_t
 bo_ptbl_rev_u16(uint16_t x)
 {
     x = ((x & 0x5555) << 1) | ((x >> 1) & 0x5555);
@@ -118,7 +130,7 @@ bo_ptbl_rev_u16(uint16_t x)
     return bo_ptbl_bswap_u16(x);
 }
 
-BO_inline uint32_t
+BO_PTBL_API uint32_t
 bo_ptbl_rev_u32(uint32_t x)
 {
     x = ((x & 0x55555555) << 1) | ((x >> 1) & 0x55555555);
@@ -127,7 +139,7 @@ bo_ptbl_rev_u32(uint32_t x)
     return bo_ptbl_bswap_u32(x);
 }
 
-BO_inline uint64_t
+BO_PTBL_API uint64_t
 bo_ptbl_rev_u64(uint64_t x)
 {
     x = ((x & 0x5555555555555555) << 1) | ((x >> 1) & 0x5555555555555555);
@@ -139,18 +151,18 @@ bo_ptbl_rev_u64(uint64_t x)
 BO_DEF_ALL_1(BO_DEF_I_FWD, rev)
 
 #define BO_DEF_PTBL_CTZ(W)                                                     \
-    BO_inline int bo_ptbl_ctz_u##W(uint##W##_t x)                              \
+    BO_PTBL_API int bo_ptbl_ctz_u##W(uint##W##_t x)                            \
     {                                                                          \
         if (!x)                                                                \
             return 8 * sizeof(x);                                              \
         x = (x ^ (x - 1)) >> 1;                                                \
-        int n;                                                                 \
-        for (n = 0; x; n++)                                                    \
+        int n = 0;                                                             \
+        for (; x; n++)                                                         \
             x >>= 1;                                                           \
         return n;                                                              \
     }                                                                          \
                                                                                \
-    BO_inline int bo_ptbl_ctz_i##W(int##W##_t x)                               \
+    BO_PTBL_API int bo_ptbl_ctz_i##W(int##W##_t x)                             \
     {                                                                          \
         return bo_ptbl_ctz_u##W((uint##W##_t) x);                              \
     }
@@ -160,18 +172,18 @@ BO_DEF_ALL(BO_DEF_PTBL_CTZ)
 #undef BO_DEF_PTBL_CTZ
 
 #define BO_DEF_PTBL_CLZ(W)                                                     \
-    BO_inline int bo_ptbl_clz_u##W(uint##W##_t x)                              \
+    BO_PTBL_API int bo_ptbl_clz_u##W(uint##W##_t x)                            \
     {                                                                          \
         if (!x)                                                                \
             return 8 * sizeof(x);                                              \
         x = (x ^ (x - 1)) >> 1;                                                \
-        int n;                                                                 \
+        int n = 0;                                                             \
         for (n = 0; (int##W##_t) x > 0; n++)                                   \
             x <<= 1;                                                           \
         return n;                                                              \
     }                                                                          \
                                                                                \
-    BO_inline int bo_ptbl_clz_i##W(int##W##_t x)                               \
+    BO_PTBL_API int bo_ptbl_clz_i##W(int##W##_t x)                             \
     {                                                                          \
         return bo_ptbl_clz_u##W((uint##W##_t) x);                              \
     }
@@ -181,18 +193,21 @@ BO_DEF_ALL(BO_DEF_PTBL_CLZ)
 #undef BO_DEF_PTBL_CLZ
 
 #define BO_DEF_IS_POW2(W)                                                      \
-    BO_inline bool bo_is_pow2_u##W(uint##W##_t x)                              \
+    BO_PTBL_API bool bo_is_pow2_u##W(uint##W##_t x)                            \
     {                                                                          \
         return (x & (x - 1)) == 0;                                             \
     }                                                                          \
                                                                                \
-    BO_inline bool bo_is_pow2_i##W(int##W##_t x) { return (x & (x - 1)) == 0; }
+    BO_PTBL_API bool bo_is_pow2_i##W(int##W##_t x)                             \
+    {                                                                          \
+        return (x & (x - 1)) == 0;                                             \
+    }
 
 BO_DEF_ALL(BO_DEF_IS_POW2)
 
 #undef BO_DEF_IS_POW2
 
-BO_inline uint8_t
+BO_PTBL_API uint8_t
 bo_ptbl_round_pow2_u8(uint8_t x)
 {
     --x;
@@ -203,7 +218,7 @@ bo_ptbl_round_pow2_u8(uint8_t x)
     return x;
 }
 
-BO_inline uint16_t
+BO_PTBL_API uint16_t
 bo_ptbl_round_pow2_u16(uint16_t x)
 {
     --x;
@@ -215,7 +230,7 @@ bo_ptbl_round_pow2_u16(uint16_t x)
     return x;
 }
 
-BO_inline uint32_t
+BO_PTBL_API uint32_t
 bo_ptbl_round_pow2_u32(uint32_t x)
 {
     --x;
@@ -228,7 +243,7 @@ bo_ptbl_round_pow2_u32(uint32_t x)
     return x;
 }
 
-BO_inline uint64_t
+BO_PTBL_API uint64_t
 bo_ptbl_round_pow2_u64(uint64_t x)
 {
     --x;
@@ -242,7 +257,7 @@ bo_ptbl_round_pow2_u64(uint64_t x)
     return x;
 }
 
-BO_inline bool
+BO_PTBL_API bool
 bo_ptbl_parity_u8(uint8_t x)
 {
     x ^= x >> 1;
@@ -251,7 +266,7 @@ bo_ptbl_parity_u8(uint8_t x)
     return x & 1;
 }
 
-BO_inline bool
+BO_PTBL_API bool
 bo_ptbl_parity_u16(uint16_t x)
 {
     x ^= x >> 1;
@@ -261,7 +276,7 @@ bo_ptbl_parity_u16(uint16_t x)
     return x & 1;
 }
 
-BO_inline bool
+BO_PTBL_API bool
 bo_ptbl_parity_u32(uint32_t x)
 {
     x ^= x >> 1;
@@ -272,7 +287,7 @@ bo_ptbl_parity_u32(uint32_t x)
     return x & 1;
 }
 
-BO_inline bool
+BO_PTBL_API bool
 bo_ptbl_parity_u64(uint64_t x)
 {
     x ^= x >> 1;

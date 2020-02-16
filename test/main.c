@@ -1,4 +1,5 @@
 
+#include "bo/c/intrin.h"
 #include "bo/c/portable.h"
 
 int
