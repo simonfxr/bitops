@@ -233,9 +233,7 @@ bo_rev_u8(uint8_t x) BO_noexcept
 #    define BO_REV_U16_CEXPR_P 1
 #else
 #    define BO_REV_U16_IMPL(x)                                                 \
-        x = ((x & 0x5555) << 1) | ((x >> 1) & 0x5555);                         \
-        x = ((x & 0x3333) << 2) | ((x >> 2) & 0x3333);                         \
-        x = ((x & 0x0F0F) << 4) | ((x >> 4) & 0x0F0F);                         \
+        BO_BYTE_REV(16);                                                       \
         return bo_bswap_u16(x);
 #    define BO_REV_U16_CEXPR_P BO_PTBL_CEXPR_P
 #endif
@@ -252,9 +250,7 @@ bo_rev_u16(uint16_t x) BO_noexcept
 #    define BO_REV_U32_CEXPR_P 1
 #else
 #    define BO_REV_U32_IMPL(x)                                                 \
-        x = ((x & 0x55555555) << 1) | ((x >> 1) & 0x55555555);                 \
-        x = ((x & 0x33333333) << 2) | ((x >> 2) & 0x33333333);                 \
-        x = ((x & 0x0F0F0F0F) << 4) | ((x >> 4) & 0x0F0F0F0F);                 \
+        BO_BYTE_REV(32);                                                       \
         return bo_bswap_u32(x);
 #    define BO_REV_U32_CEXPR_P BO_PTBL_CEXPR_P
 #endif
@@ -271,9 +267,7 @@ bo_rev_u32(uint32_t x) BO_noexcept
 #    define BO_REV_U64_CEXPR_P 1
 #else
 #    define BO_REV_U64_IMPL(x)                                                 \
-        x = ((x & 0x5555555555555555) << 1) | ((x >> 1) & 0x5555555555555555); \
-        x = ((x & 0x3333333333333333) << 2) | ((x >> 2) & 0x3333333333333333); \
-        x = ((x & 0x0F0F0F0F0F0F0F0F) << 4) | ((x >> 4) & 0x0F0F0F0F0F0F0F0F); \
+        BO_BYTE_REV(64);                                                       \
         return bo_bswap_u64(x);
 #    define BO_REV_U64_CEXPR_P BO_PTBL_CEXPR_P
 #endif
@@ -286,11 +280,14 @@ bo_rev_u64(uint64_t x) BO_noexcept
 }
 
 #if hu_has_builtin(__builtin_ctz) || HU_COMP_GNUC_P
-#    define BO_CTZ_U32_IMPL(x) x == 0 ? 32 : __builtin_ctz(x)
+#    define BO_CTZNZ_U32_IMPL(x) __builtin_ctz(x)
+#    define BO_CTZ_U32_IMPL(x)                                                 \
+        int y = BO_CTZNZ_U32_IMPL(x);                                          \
+        return x != 0 ? y : 32;
 #    define BO_CTZ_U32_CEXPR_P 1
 #    define BO_HAVE_CTZ_U32_INTRIN_P() 1
 #else
-#    define BO_CTZ_U32_IMPL bo_ptbl_ctz_u32
+#    define BO_CTZ_U32_IMPL(x) return bo_ptbl_ctz_u32(x)
 #    define BO_CTZ_U32_CEXPR_P BO_PTBL_CEXPR_P
 #    define BO_HAVE_CTZ_U32_INTRIN_P() 0
 #endif
@@ -299,38 +296,63 @@ BO_INTRIN_API(BO_CTZ_U32_CEXPR_P)
 int
 bo_ctz_u32(uint32_t x) BO_noexcept
 {
-    return BO_CTZ_U32_IMPL(x);
+    BO_CTZ_U32_IMPL(x);
 }
 
-#if BO_HAVE_CTZ_U32_INTRIN_P()
-#    define BO_CTZ_U16_IMPL(x) x == 0 ? 16 : BO_CTZ_U32_IMPL(x)
+#if hu_has_builtin(__builtin_ctzs)
+#    define BO_CTZNZ_U16_IMPL(x) __builtin_ctzs(x)
+#    define BO_CTZ_U16_IMPL(x)                                                 \
+        int y = BO_CTZNZ_U16_IMPL(x);                                          \
+        return x != 0 ? y : 16;
+#    define BO_CTZ_U16_CEXPR_P 1
+#    define BO_HAVE_CTZ_U16_INTRIN_P() 1
+#elif BO_HAVE_CTZ_U32_INTRIN_P()
+#    define BO_CTZ_U16_IMPL(x) return BO_CTZNZ_U32_IMPL(x | 0x10000u)
 #    define BO_CTZ_U16_CEXPR_P BO_CTZ_U32_CEXPR_P
+#    define BO_CTZNZ_U16_IMPL BO_CTZNZ_U32_IMPL
+#    define BO_HAVE_CTZ_U16_INTRIN_P() 1
 #else
-#    define BO_CTZ_U16_IMPL bo_ptbl_ctz_u16
+#    define BO_CTZ_U16_IMPL(x) return bo_ptbl_ctz_u16(x)
 #    define BO_CTZ_U16_CEXPR_P BO_PTBL_CEXPR_P
+#    define BO_HAVE_CTZ_U16_INTRIN_P() 0
 #endif
 
 BO_INTRIN_API(BO_CTZ_U16_CEXPR_P)
 int
 bo_ctz_u16(uint16_t x) BO_noexcept
 {
-    return BO_CTZ_U16_IMPL(x);
+    BO_CTZ_U16_IMPL(x);
 }
 
-#define BO_CTZ_U8_CEXPR_P 1
+#if BO_HAVE_CTZ_U16_INTRIN_P()
+#    define BO_CTZ_U8_IMPL(x) BO_CTZNZ_U16_IMPL(x | (uint16_t) 0x100u)
+#    define BO_CTZ_U8_CEXPR_P BO_CTZ_U16_CEXPR_P
+#else
+#    define BO_CTZ_U8_IMPL bo_ptbl_ctz_u8
+#    define BO_CTZ_U8_CEXPR_P BO_PTBL_CEXPR_P
+#endif
 
 BO_INTRIN_API(BO_CTZ_U8_CEXPR_P)
 int
 bo_ctz_u8(uint8_t x) BO_noexcept
 {
-    return bo_ptbl_ctz_u8(x);
+    return BO_CTZ_U8_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_ctzll) || HU_COMP_GNUC_P
-#    define BO_CTZ_U64_IMPL(x) x == 0 ? 64 : __builtin_ctzll(x)
+#    define BO_CTZ_U64_IMPL(x)                                                 \
+        int n = __builtin_ctzll(x);                                            \
+        return x != 0 ? n : 64;
 #    define BO_CTZ_U64_CEXPR_P 1
+#elif BO_HAVE_CTZ_U32_INTRIN_P()
+#    define BO_CTZ_U64_IMPL(x)                                                 \
+        uint32_t lo = (uint32_t) x;                                            \
+        if (lo != 0)                                                           \
+            return BO_CTZNZ_U32_IMPL(lo);                                      \
+        return bo_ctz_u32((uint32_t)(x >> 32))
+#    define BO_CTZ_U64_CEXPR_P BO_CTZ_U32_CEXPR_P
 #else
-#    define BO_CTZ_U64_IMPL bo_ptbl_ctz_u64
+#    define BO_CTZ_U64_IMPL(x) return bo_ptbl_ctz_u64(x)
 #    define BO_CTZ_U64_CEXPR_P BO_PTBL_CEXPR_P
 #endif
 
@@ -338,15 +360,18 @@ BO_INTRIN_API(BO_CTZ_U64_CEXPR_P)
 int
 bo_ctz_u64(uint64_t x) BO_noexcept
 {
-    return BO_CTZ_U64_IMPL(x);
+    BO_CTZ_U64_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_clz) || HU_COMP_GNUC_P
-#    define BO_CLZ_U32_IMPL(x) x == 0 ? 32 : __builtin_clz(x)
+#    define BO_CLZNZ_U32_IMPL(x) __builtin_clz(x)
+#    define BO_CLZ_U32_IMPL(x)                                                 \
+        int y = BO_CLZNZ_U32_IMPL(x);                                          \
+        return x != 0 ? y : 32;
 #    define BO_CLZ_U32_CEXPR_P 1
 #    define BO_HAVE_CLZ_U32_INTRIN_P() 1
 #else
-#    define BO_CLZ_U32_IMPL bo_ptbl_clz_u32
+#    define BO_CLZ_U32_IMPL(x) return bo_ptbl_clz_u32(x)
 #    define BO_CLZ_U32_CEXPR_P BO_PTBL_CEXPR_P
 #    define BO_HAVE_CLZ_U32_INTRIN_P() 0
 #endif
@@ -355,38 +380,64 @@ BO_INTRIN_API(BO_CLZ_U32_CEXPR_P)
 int
 bo_clz_u32(uint32_t x) BO_noexcept
 {
-    return BO_CLZ_U32_IMPL(x);
+    BO_CLZ_U32_IMPL(x);
 }
 
-#if BO_HAVE_CLZ_U32_INTRIN_P()
-#    define BO_CLZ_U16_IMPL(x) x == 0 ? 16 : BO_CLZ_U32_IMPL(x)
+#if hu_has_builtin(__builtin_clzs)
+#    define BO_CLZNZ_U16_IMPL(x) __builtin_clzs(x)
+#    define BO_CLZ_U16_IMPL(x)                                                 \
+        int y = BO_CLZNZ_U16_IMPL(x);                                          \
+        return x != 0 ? y : 16;
+#    define BO_CLZ_U16_CEXPR_P 1
+#    define BO_HAVE_CLZ_U16_INTRIN_P() 1
+#elif BO_HAVE_CLZ_U32_INTRIN_P()
+#    define BO_CLZ_U16_IMPL(x)                                                 \
+        return BO_CLZNZ_U32_IMPL(((uint32_t) x << 16) | 0x8000u)
 #    define BO_CLZ_U16_CEXPR_P BO_CLZ_U32_CEXPR_P
+#    define BO_CLZNZ_U16_IMPL BO_CLZNZ_U32_IMPL
+#    define BO_HAVE_CLZ_U16_INTRIN_P() 1
 #else
-#    define BO_CLZ_U16_IMPL bo_ptbl_clz_u16
+#    define BO_CLZ_U16_IMPL(x) return bo_ptbl_clz_u16(x)
 #    define BO_CLZ_U16_CEXPR_P BO_PTBL_CEXPR_P
+#    define BO_HAVE_CLZ_U16_INTRIN_P() 0
 #endif
 
 BO_INTRIN_API(BO_CLZ_U16_CEXPR_P)
 int
 bo_clz_u16(uint16_t x) BO_noexcept
 {
-    return BO_CLZ_U16_IMPL(x);
+    BO_CLZ_U16_IMPL(x);
 }
 
-#define BO_CLZ_U8_CEXPR_P 1
+#if BO_HAVE_CLZ_U16_INTRIN_P()
+#    define BO_CLZ_U8_IMPL(x) BO_CLZNZ_U16_IMPL(((uint16_t) x << 8) | 0x80u)
+#    define BO_CLZ_U8_CEXPR_P BO_CLZ_U16_CEXPR_P
+#else
+#    define BO_CLZ_U8_IMPL bo_ptbl_clz_u8
+#    define BO_CLZ_U8_CEXPR_P BO_PTBL_CEXPR_P
+#endif
 
 BO_INTRIN_API(BO_CLZ_U8_CEXPR_P)
 int
 bo_clz_u8(uint8_t x) BO_noexcept
 {
-    return bo_ptbl_clz_u8(x);
+    return BO_CLZ_U8_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_clzll) || HU_COMP_GNUC_P
-#    define BO_CLZ_U64_IMPL(x) x == 0 ? 64 : __builtin_clzll(x)
+#    define BO_CLZ_U64_IMPL(x)                                                 \
+        int n = __builtin_clzll(x);                                            \
+        return x != 0 ? n : 64;
 #    define BO_CLZ_U64_CEXPR_P 1
+#elif BO_HAVE_CLZ_U32_INTRIN_P()
+#    define BO_CLZ_U64_IMPL(x)                                                 \
+        uint32_t hi = (uint32_t)(x >> 32);                                     \
+        if (hi != 0)                                                           \
+            return BO_CLZNZ_U32_IMPL(hi);                                      \
+        return bo_clz_u32((uint32_t) x)
+#    define BO_CLZ_U64_CEXPR_P BO_CLZ_U32_CEXPR_P
 #else
-#    define BO_CLZ_U64_IMPL bo_ptbl_clz_u64
+#    define BO_CLZ_U64_IMPL(x) return bo_ptbl_clz_u64(x)
 #    define BO_CLZ_U64_CEXPR_P BO_PTBL_CEXPR_P
 #endif
 
@@ -394,7 +445,7 @@ BO_INTRIN_API(BO_CLZ_U64_CEXPR_P)
 int
 bo_clz_u64(uint64_t x) BO_noexcept
 {
-    return BO_CLZ_U64_IMPL(x);
+    BO_CLZ_U64_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_parity) || HU_COMP_GNUC_P
