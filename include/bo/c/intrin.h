@@ -74,7 +74,7 @@
 
 BO_INTRIN_API(BO_POPCNT_U32_CEXPR_P)
 int
-bo_popcnt_u32(uint32_t x)
+bo_popcnt_u32(uint32_t x) BO_noexcept
 {
     return BO_POPCNT_U32_IMPL(x);
 }
@@ -99,7 +99,7 @@ bo_popcnt_u32(uint32_t x)
 
 BO_INTRIN_API(BO_POPCNT_U16_CEXPR_P)
 int
-bo_popcnt_u16(uint16_t x)
+bo_popcnt_u16(uint16_t x) BO_noexcept
 {
     return BO_POPCNT_U16_IMPL(x);
 }
@@ -117,7 +117,7 @@ bo_popcnt_u16(uint16_t x)
 
 BO_INTRIN_API(BO_POPCNT_U8_CEXPR_P)
 int
-bo_popcnt_u8(uint8_t x)
+bo_popcnt_u8(uint8_t x) BO_noexcept
 {
     return BO_POPCNT_U8_IMPL(x);
 }
@@ -144,14 +144,16 @@ bo_popcnt_u8(uint8_t x)
 
 BO_INTRIN_API(BO_POPCNT_U64_CEXPR_P)
 int
-bo_popcnt_u64(uint64_t x)
+bo_popcnt_u64(uint64_t x) BO_noexcept
 {
     return BO_POPCNT_U64_IMPL(x);
 }
 
-BO_PTBL_API
+#define BO_BSWAP_U8_CEXPR_P 1
+
+BO_INTRIN_API(BO_POPCNT_U8_CEXPR_P)
 uint8_t
-bo_bswap_u8(uint8_t x)
+bo_bswap_u8(uint8_t x) BO_noexcept
 {
     return x;
 }
@@ -169,7 +171,7 @@ bo_bswap_u8(uint8_t x)
 
 BO_INTRIN_API(BO_BSWAP_U16_CEXPR_P)
 uint16_t
-bo_bswap_u16(uint16_t x)
+bo_bswap_u16(uint16_t x) BO_noexcept
 {
     return BO_BSWAP_U16_IMPL(x);
 }
@@ -187,7 +189,7 @@ bo_bswap_u16(uint16_t x)
 
 BO_INTRIN_API(BO_BSWAP_U32_CEXPR_P)
 uint32_t
-bo_bswap_u32(uint32_t x)
+bo_bswap_u32(uint32_t x) BO_noexcept
 {
     return BO_BSWAP_U32_IMPL(x);
 }
@@ -206,7 +208,7 @@ bo_bswap_u32(uint32_t x)
 
 BO_INTRIN_API(BO_BSWAP_U64_CEXPR_P)
 uint64_t
-bo_bswap_u64(uint64_t x)
+bo_bswap_u64(uint64_t x) BO_noexcept
 {
     return BO_BSWAP_U64_IMPL(x);
 }
@@ -221,7 +223,7 @@ bo_bswap_u64(uint64_t x)
 
 BO_INTRIN_API(BO_REV_U8_CEXPR_P)
 uint8_t
-bo_rev_u8(uint8_t x)
+bo_rev_u8(uint8_t x) BO_noexcept
 {
     BO_REV_U8_IMPL(x)
 }
@@ -240,7 +242,7 @@ bo_rev_u8(uint8_t x)
 
 BO_INTRIN_API(BO_REV_U16_CEXPR_P)
 uint16_t
-bo_rev_u16(uint16_t x)
+bo_rev_u16(uint16_t x) BO_noexcept
 {
     BO_REV_U16_IMPL(x)
 }
@@ -259,7 +261,7 @@ bo_rev_u16(uint16_t x)
 
 BO_INTRIN_API(BO_REV_U32_CEXPR_P)
 uint32_t
-bo_rev_u32(uint32_t x)
+bo_rev_u32(uint32_t x) BO_noexcept
 {
     BO_REV_U32_IMPL(x)
 }
@@ -278,9 +280,177 @@ bo_rev_u32(uint32_t x)
 
 BO_INTRIN_API(BO_REV_U64_CEXPR_P)
 uint64_t
-bo_rev_u64(uint64_t x)
+bo_rev_u64(uint64_t x) BO_noexcept
 {
     BO_REV_U64_IMPL(x)
+}
+
+#if hu_has_builtin(__builtin_ctz) || HU_COMP_GNUC_P
+#    define BO_CTZ_U32_IMPL(x) x == 0 ? 32 : __builtin_ctz(x)
+#    define BO_CTZ_U32_CEXPR_P 1
+#    define BO_HAVE_CTZ_U32_INTRIN_P() 1
+#else
+#    define BO_CTZ_U32_IMPL bo_ptbl_ctz_u32
+#    define BO_CTZ_U32_CEXPR_P BO_PTBL_CEXPR_P
+#    define BO_HAVE_CTZ_U32_INTRIN_P() 0
+#endif
+
+BO_INTRIN_API(BO_CTZ_U32_CEXPR_P)
+int
+bo_ctz_u32(uint32_t x) BO_noexcept
+{
+    return BO_CTZ_U32_IMPL(x);
+}
+
+#if BO_HAVE_CTZ_U32_INTRIN_P()
+#    define BO_CTZ_U16_IMPL(x) x == 0 ? 16 : BO_CTZ_U32_IMPL(x)
+#    define BO_CTZ_U16_CEXPR_P BO_CTZ_U32_CEXPR_P
+#else
+#    define BO_CTZ_U16_IMPL bo_ptbl_ctz_u16
+#    define BO_CTZ_U16_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_CTZ_U16_CEXPR_P)
+int
+bo_ctz_u16(uint16_t x) BO_noexcept
+{
+    return BO_CTZ_U16_IMPL(x);
+}
+
+#define BO_CTZ_U8_CEXPR_P 1
+
+BO_INTRIN_API(BO_CTZ_U8_CEXPR_P)
+int
+bo_ctz_u8(uint8_t x) BO_noexcept
+{
+    return bo_ptbl_ctz_u8(x);
+}
+
+#if hu_has_builtin(__builtin_ctzll) || HU_COMP_GNUC_P
+#    define BO_CTZ_U64_IMPL(x) x == 0 ? 64 : __builtin_ctzll(x)
+#    define BO_CTZ_U64_CEXPR_P 1
+#else
+#    define BO_CTZ_U64_IMPL bo_ptbl_ctz_u64
+#    define BO_CTZ_U64_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_CTZ_U64_CEXPR_P)
+int
+bo_ctz_u64(uint64_t x) BO_noexcept
+{
+    return BO_CTZ_U64_IMPL(x);
+}
+
+#if hu_has_builtin(__builtin_clz) || HU_COMP_GNUC_P
+#    define BO_CLZ_U32_IMPL(x) x == 0 ? 32 : __builtin_clz(x)
+#    define BO_CLZ_U32_CEXPR_P 1
+#    define BO_HAVE_CLZ_U32_INTRIN_P() 1
+#else
+#    define BO_CLZ_U32_IMPL bo_ptbl_clz_u32
+#    define BO_CLZ_U32_CEXPR_P BO_PTBL_CEXPR_P
+#    define BO_HAVE_CLZ_U32_INTRIN_P() 0
+#endif
+
+BO_INTRIN_API(BO_CLZ_U32_CEXPR_P)
+int
+bo_clz_u32(uint32_t x) BO_noexcept
+{
+    return BO_CLZ_U32_IMPL(x);
+}
+
+#if BO_HAVE_CLZ_U32_INTRIN_P()
+#    define BO_CLZ_U16_IMPL(x) x == 0 ? 16 : BO_CLZ_U32_IMPL(x)
+#    define BO_CLZ_U16_CEXPR_P BO_CLZ_U32_CEXPR_P
+#else
+#    define BO_CLZ_U16_IMPL bo_ptbl_clz_u16
+#    define BO_CLZ_U16_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_CLZ_U16_CEXPR_P)
+int
+bo_clz_u16(uint16_t x) BO_noexcept
+{
+    return BO_CLZ_U16_IMPL(x);
+}
+
+#define BO_CLZ_U8_CEXPR_P 1
+
+BO_INTRIN_API(BO_CLZ_U8_CEXPR_P)
+int
+bo_clz_u8(uint8_t x) BO_noexcept
+{
+    return bo_ptbl_clz_u8(x);
+}
+
+#if hu_has_builtin(__builtin_clzll) || HU_COMP_GNUC_P
+#    define BO_CLZ_U64_IMPL(x) x == 0 ? 64 : __builtin_clzll(x)
+#    define BO_CLZ_U64_CEXPR_P 1
+#else
+#    define BO_CLZ_U64_IMPL bo_ptbl_clz_u64
+#    define BO_CLZ_U64_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_CLZ_U64_CEXPR_P)
+int
+bo_clz_u64(uint64_t x) BO_noexcept
+{
+    return BO_CLZ_U64_IMPL(x);
+}
+
+#if hu_has_builtin(__builtin_parity) || HU_COMP_GNUC_P
+#    define BO_PARITY_U32_IMPL(x) x == 0 ? 32 : __builtin_parity(x)
+#    define BO_PARITY_U32_CEXPR_P 1
+#    define BO_HAVE_PARITY_U32_INTRIN_P() 1
+#else
+#    define BO_PARITY_U32_IMPL bo_ptbl_parity_u32
+#    define BO_PARITY_U32_CEXPR_P BO_PTBL_CEXPR_P
+#    define BO_HAVE_PARITY_U32_INTRIN_P() 0
+#endif
+
+BO_INTRIN_API(BO_PARITY_U32_CEXPR_P)
+bool
+bo_parity_u32(uint32_t x) BO_noexcept
+{
+    return BO_PARITY_U32_IMPL(x);
+}
+
+#if BO_HAVE_PARITY_U32_INTRIN_P()
+#    define BO_PARITY_U16_IMPL(x) x == 0 ? 16 : BO_PARITY_U32_IMPL(x)
+#    define BO_PARITY_U16_CEXPR_P BO_PARITY_U32_CEXPR_P
+#else
+#    define BO_PARITY_U16_IMPL bo_ptbl_parity_u16
+#    define BO_PARITY_U16_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_PARITY_U16_CEXPR_P)
+bool
+bo_parity_u16(uint16_t x) BO_noexcept
+{
+    return BO_PARITY_U16_IMPL(x);
+}
+
+#define BO_PARITY_U8_CEXPR_P 1
+
+BO_INTRIN_API(BO_PARITY_U8_CEXPR_P)
+bool
+bo_parity_u8(uint8_t x) BO_noexcept
+{
+    return bo_ptbl_parity_u8(x);
+}
+
+#if hu_has_builtin(__builtin_parityll) || HU_COMP_GNUC_P
+#    define BO_PARITY_U64_IMPL(x) x == 0 ? 64 : __builtin_parityll(x)
+#    define BO_PARITY_U64_CEXPR_P 1
+#else
+#    define BO_PARITY_U64_IMPL bo_ptbl_parity_u64
+#    define BO_PARITY_U64_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_PARITY_U64_CEXPR_P)
+bool
+bo_parity_u64(uint64_t x) BO_noexcept
+{
+    return BO_PARITY_U64_IMPL(x);
 }
 
 #endif
