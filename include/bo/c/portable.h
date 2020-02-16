@@ -13,13 +13,13 @@
 #if defined(__cplusplus)
 #    if __cplusplus >= 201402L
 #        define BO_PTBL_CEXPR_P 1
-#        define BO_cexpr constexpr
+#        define BO_cexpr /*constexpr*/
 #    endif
 #endif
 
 #ifndef BO_cexpr
 #    define BO_PTBL_CEXPR_P 0
-#    define BO_cexpr static inline
+#    define BO_cexpr
 #endif
 
 #define BO_PTBL_API /*inline*/ BO_cexpr
