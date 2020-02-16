@@ -504,4 +504,30 @@ bo_parity_u64(uint64_t x) BO_noexcept
     return BO_PARITY_U64_IMPL(x);
 }
 
+#if defined(__SIZEOF_INT128__)
+#    define BO_MUL_U64_IMPL(x, y)                                              \
+        unsigned __int128 xy = (unsigned __int128) x * y;                      \
+        prod.lo = (uint64_t) xy;                                               \
+        prod.hi = (uint64_t)(xy >> 64)
+#    define BO_MUL_U64_CEXPR_P 1
+#elif BO_HAVE_MSVC_INTRIN_H_P() && HU_ARCH_X86_P && HU_BITS_64_P
+#    define BO_MUL_U64_IMPL(x, y) prod.lo = _umul128(x, y, &prod.hi)
+#    define BO_MUL_U64_CEXPR_P 0
+#elif BO_HAVE_MSVC_INTRIN_H_P() && HU_ARCH_X86_P && HU_BITS_32_P
+#    define BO_MUL_U64_IMPL(x, y) BO_PTBL_MUL_U64(x, y, __emulu)
+#    define BO_MUL_U64_CEXPR_P 0
+#else
+#    define BO_MUL_U64_IMPL(x, y) prod = bo_ptbl_mul_u64(x, y)
+#    define BO_MUL_U64_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_MUL_U64_CEXPR_P)
+bo_unpacked_u128
+bo_mul_u64(uint64_t x, uint64_t y) BO_noexcept
+{
+    bo_unpacked_u128 prod = {};
+    BO_MUL_U64_IMPL(x, y);
+    return prod;
+}
+
 #endif
