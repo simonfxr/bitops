@@ -23,7 +23,7 @@
 #    endif
 #    if __cplusplus >= 201402L
 #        define BO_PTBL_CEXPR_P 1
-#        define BO_cexpr /*constexpr*/
+#        define BO_cexpr constexpr
 #    endif
 #endif
 
@@ -36,7 +36,17 @@
 #    define BO_noexcept
 #endif
 
-#define BO_PTBL_API /*inline*/ BO_cexpr
+#ifndef BO_FORCE_CODEGEN
+#    ifdef __cplusplus
+#        define BO_PTBL_API BO_cexpr inline
+#    else
+#        define BO_PTBL_API static inline
+#    endif
+#else
+#    undef BO_cexpr
+#    define BO_cexpr
+#    define BO_PTBL_API
+#endif
 
 #define BO_DEF_I_FWD(W, nm)                                                    \
     BO_PTBL_API int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x) BO_noexcept       \

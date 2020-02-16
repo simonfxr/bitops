@@ -215,7 +215,7 @@ bo_bswap_u64(uint64_t x) BO_noexcept
 
 #if hu_has_builtin(__builtin_bitreverse8)
 #    define BO_REV_U8_IMPL(x) return __builtin_bitreverse8(x);
-#    define BO_REV_U8_CEXPR_P 1
+#    define BO_REV_U8_CEXPR_P 0
 #else
 #    define BO_REV_U8_IMPL(x) return bo_ptbl_rev_u8(x);
 #    define BO_REV_U8_CEXPR_P BO_PTBL_CEXPR_P
@@ -230,7 +230,7 @@ bo_rev_u8(uint8_t x) BO_noexcept
 
 #if hu_has_builtin(__builtin_bitreverse16)
 #    define BO_REV_U16_IMPL(x) return __builtin_bitreverse16(x);
-#    define BO_REV_U16_CEXPR_P 1
+#    define BO_REV_U16_CEXPR_P 0
 #else
 #    define BO_REV_U16_IMPL(x)                                                 \
         BO_BYTE_REV(16);                                                       \
@@ -247,7 +247,7 @@ bo_rev_u16(uint16_t x) BO_noexcept
 
 #if hu_has_builtin(__builtin_bitreverse32)
 #    define BO_REV_U32_IMPL(x) return __builtin_bitreverse32(x);
-#    define BO_REV_U32_CEXPR_P 1
+#    define BO_REV_U32_CEXPR_P 0
 #else
 #    define BO_REV_U32_IMPL(x)                                                 \
         BO_BYTE_REV(32);                                                       \
@@ -264,7 +264,7 @@ bo_rev_u32(uint32_t x) BO_noexcept
 
 #if hu_has_builtin(__builtin_bitreverse64)
 #    define BO_REV_U64_IMPL(x) return __builtin_bitreverse64(x);
-#    define BO_REV_U64_CEXPR_P 1
+#    define BO_REV_U64_CEXPR_P 0
 #else
 #    define BO_REV_U64_IMPL(x)                                                 \
         BO_BYTE_REV(64);                                                       \
@@ -449,7 +449,7 @@ bo_clz_u64(uint64_t x) BO_noexcept
 }
 
 #if hu_has_builtin(__builtin_parity) || HU_COMP_GNUC_P
-#    define BO_PARITY_U32_IMPL(x) x == 0 ? 32 : __builtin_parity(x)
+#    define BO_PARITY_U32_IMPL(x) __builtin_parity(x)
 #    define BO_PARITY_U32_CEXPR_P 1
 #    define BO_HAVE_PARITY_U32_INTRIN_P() 1
 #else
@@ -466,7 +466,7 @@ bo_parity_u32(uint32_t x) BO_noexcept
 }
 
 #if BO_HAVE_PARITY_U32_INTRIN_P()
-#    define BO_PARITY_U16_IMPL(x) x == 0 ? 16 : BO_PARITY_U32_IMPL(x)
+#    define BO_PARITY_U16_IMPL(x) BO_PARITY_U32_IMPL(x)
 #    define BO_PARITY_U16_CEXPR_P BO_PARITY_U32_CEXPR_P
 #else
 #    define BO_PARITY_U16_IMPL bo_ptbl_parity_u16
@@ -490,7 +490,7 @@ bo_parity_u8(uint8_t x) BO_noexcept
 }
 
 #if hu_has_builtin(__builtin_parityll) || HU_COMP_GNUC_P
-#    define BO_PARITY_U64_IMPL(x) x == 0 ? 64 : __builtin_parityll(x)
+#    define BO_PARITY_U64_IMPL(x) __builtin_parityll(x)
 #    define BO_PARITY_U64_CEXPR_P 1
 #else
 #    define BO_PARITY_U64_IMPL bo_ptbl_parity_u64
