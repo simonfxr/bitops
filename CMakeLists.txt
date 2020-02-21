@@ -12,6 +12,13 @@ if(SFX_BO_STANDALONE_PROJECT)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  list(APPEND cflags "-Weverything" "-Wno-c++98-compat"
+       "-Wno-c++98-compat-pedantic")
+elseif(CMAKE_C_COMPILER_ID MATCHES GNU)
+  list(APPEND cflags "-Wall" "-Wextra")
+endif()
+
 if(NOT TARGET header-utils::header-utils)
   add_subdirectory(deps/cxx-header-utils)
 endif()
@@ -26,6 +33,7 @@ if(SFX_BO_STANDALONE_PROJECT)
   macro(sfx_bo_add_test tgt)
     add_executable(${tgt} test/${ARGN})
     target_link_libraries(${tgt} sfx-bitops::sfx-bitops)
+    target_compile_options(${tgt} PRIVATE ${cflags})
   endmacro()
 
   sfx_bo_add_test(main main.c)
