@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(SFX_BO_STANDALONE_PROJECT FALSE)
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(SFX_BO_STANDALONE_PROJECT TRUE)
-endif()
+project(sfx-bitops LANGUAGES C CXX)
 
-if(SFX_BO_STANDALONE_PROJECT)
-  project(sfx-bitops LANGUAGES C CXX)
+set(SFX_BO_STANDALONE_PROJECT FALSE)
+if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
+  set(SFX_BO_STANDALONE_PROJECT TRUE)
 
   set(CMAKE_C_STANDARD 11)
   set(CMAKE_CXX_STANDARD 17)
+
+  enable_testing()
 endif()
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
@@ -34,6 +34,7 @@ if(SFX_BO_STANDALONE_PROJECT)
     add_executable(${tgt} test/${ARGN})
     target_link_libraries(${tgt} sfx-bitops::sfx-bitops)
     target_compile_options(${tgt} PRIVATE ${cflags})
+    add_test(NAME ${tgt} COMMAND ${tgt})
   endmacro()
 
   sfx_bo_add_test(main main.c)
