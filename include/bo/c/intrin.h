@@ -529,10 +529,10 @@ bo_parity_u64(uint64_t x) BO_noexcept
 #endif
 
 BO_INTRIN_API(BO_MUL_U64_CEXPR_P)
-bo_unpacked_u128
+bo_u128
 bo_mul_u64(uint64_t x, uint64_t y) BO_noexcept
 {
-    bo_unpacked_u128 prod = { 0, 0 };
+    bo_u128 prod = { 0, 0 };
     BO_MUL_U64_IMPL(x, y);
     return prod;
 }

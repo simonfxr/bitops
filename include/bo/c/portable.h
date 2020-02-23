@@ -15,6 +15,7 @@
 HU_BEGIN_EXTERN_C
 
 #define BO_CAT(x, y) x##y
+#define BO_CAT1(x, y) BO_CAT(x, y)
 #define BO_Q(...) (__VA_ARGS__)
 #define BO_NIL /* empty */
 
@@ -277,12 +278,47 @@ BO_DEF_ALL(BO_DEF_PTBL_PARITY)
 
 BO_DEF_ALL_1(BO_DEF_I_FWD_BOOL, parity)
 
-typedef struct bo_unpacked_u128
+typedef struct bo_u128
 {
     uint64_t lo, hi;
-} bo_unpacked_u128;
+} bo_u128;
 
-#define BO_PTBL_MUL_U64(x, y, mul)                                             \
+BO_PTBL_API
+int
+bo_ptbl_cmp_u128(const bo_u128 *x, const bo_u128 *y)
+{
+    if (x->hi != y->hi)
+        return x->hi > y->hi ? 1 : -1;
+    if (x->lo != y->lo)
+        return x->lo > y->lo ? 1 : -1;
+    return 0;
+}
+
+#ifdef __cplusplus
+BO_PTBL_API
+bool
+operator==(const bo_u128 &x, const bo_u128 &y) BO_noexcept
+{
+    return bo_ptbl_cmp_u128(&x, &y) == 0;
+}
+
+BO_PTBL_API
+bool
+operator!=(const bo_u128 &x, const bo_u128 &y) BO_noexcept
+{
+    return bo_ptbl_cmp_u128(&x, &y) != 0;
+}
+
+BO_PTBL_API
+bool
+operator<(const bo_u128 &x, const bo_u128 &y) BO_noexcept
+{
+    return bo_ptbl_cmp_u128(&x, &y) < 0;
+}
+
+#endif
+
+#define BO_PTBL_MUL_U64(x, y, MUL32)                                           \
     do {                                                                       \
         uint32_t xl = bo_ucast(32, x);                                         \
         uint32_t xh = (x) >> 32;                                               \
@@ -294,10 +330,10 @@ typedef struct bo_unpacked_u128
          * time and might take longer for larger arguments                     \
          */                                                                    \
                                                                                \
-        uint64_t ll = mul(xl, yl);                                             \
-        uint64_t lh = mul(xl, yh);                                             \
-        uint64_t hl = mul(xh, yl);                                             \
-        uint64_t hh = mul(xh, yh);                                             \
+        uint64_t ll = MUL32(xl, yl);                                           \
+        uint64_t lh = MUL32(xl, yh);                                           \
+        uint64_t hl = MUL32(xh, yl);                                           \
+        uint64_t hh = MUL32(xh, yh);                                           \
                                                                                \
         uint64_t c = ((ll >> 32) + bo_ucast(32, lh) + bo_ucast(32, hl)) >> 32; \
         prod.lo = ll + ((lh + hl) << 32);                                      \
@@ -307,10 +343,10 @@ typedef struct bo_unpacked_u128
 #define BO_MUL_64_OP(x, y) (bo_ucast(64, x) * (y))
 
 BO_PTBL_API
-bo_unpacked_u128
+bo_u128
 bo_ptbl_mul_u64(uint64_t x, uint64_t y) BO_noexcept
 {
-    bo_unpacked_u128 prod = { 0, 0 };
+    bo_u128 prod = { 0, 0 };
     BO_PTBL_MUL_U64(x, y, BO_MUL_64_OP);
     return prod;
 }
