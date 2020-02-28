@@ -12,6 +12,10 @@
 #    include <hu/lang.h>
 #endif
 
+#ifndef HU_ENDIAN_H
+#    include <hu/endian.h>
+#endif
+
 HU_BEGIN_EXTERN_C
 
 #define BO_CAT(x, y) x##y
@@ -31,6 +35,54 @@ HU_BEGIN_EXTERN_C
 #define BO_BMASK_16(B) bo_ucast(16, (B) *0x0101u)
 #define BO_BMASK_32(B) bo_ucast(32, (B) *0x01010101u)
 #define BO_BMASK_64(B) bo_ucast(64, (B) *0x0101010101010101ull)
+
+#define BO_MIN_U_8 0u
+#define BO_MIN_U_16 0u
+#define BO_MIN_U_32 0u
+#define BO_MIN_U_64 0ull
+
+#define BO_MIN_I_8 -0x80
+#define BO_MIN_I_16 -0x8000
+#define BO_MIN_I_32 -0x80000000
+#define BO_MIN_I_64 -0x8000000000000000ll
+
+#define BO_MIN_UI_W(UI, W) BO_MIN_##UI##_##W
+
+#define BO_MAX_U_8 0xFFu
+#define BO_MAX_U_16 0xFFFFu
+#define BO_MAX_U_32 0xFFFFFFFFu
+#define BO_MAX_U_64 0xFFFFFFFFFFFFFFFFull
+
+#define BO_MAX_I_8 0x7F
+#define BO_MAX_I_16 0x7FFF
+#define BO_MAX_I_32 0x7FFFFFFF
+#define BO_MAX_I_64 0x7FFFFFFFFFFFFFFFll
+
+#define BO_MAX_UI_W(UI, W) BO_MAX_##UI##_##W
+
+#define BO_WIDEN_W_8 16
+#define BO_WIDEN_W_16 32
+#define BO_WIDEN_W_32 64
+
+#define BO_WIDEN_W(W) BO_WIDEN_W_##W
+
+#define BO_WIDEN_UT(W) BO_CAT1(BO_CAT1(uint, BO_WIDEN_W(W)), _t)
+#define BO_WIDEN_IT(W) BO_CAT1(BO_CAT1(int, BO_WIDEN_W(W)), _t)
+
+#define BO_IPREFIX_u u
+#define BO_IPREFIX_i
+
+#define BO_IPREFIXT_u uint
+#define BO_IPREFIXT_i int
+
+#define BO_EXPAND0(...) __VA_ARGS__
+#define BO_EXPAND1(...) BO_EXPAND0(__VA_ARGS__)
+#define BO_EXPAND(...) BO_EXPAND1(__VA_ARGS__)
+
+#define BO_AP(F, ...) F(__VA_ARGS__)
+
+#define BO_TYPE_UI_W(UI, W)                                                    \
+    BO_CAT1(BO_CAT1(BO_EXPAND(BO_CAT1(BO_IPREFIXT_, UI)), W), _t)
 
 #if defined(__cplusplus)
 #    if __cplusplus >= 201103L
@@ -280,7 +332,34 @@ BO_DEF_ALL_1(BO_DEF_I_FWD_BOOL, parity)
 
 typedef struct bo_u128
 {
+#if HU_LITTLE_ENDIAN_P
     uint64_t lo, hi;
+#    ifdef __cplusplus
+#        define BO_U128_INIT(lo, hi)                                           \
+            ::bo_u128 { (lo), (hi) }
+#    elif HU_C_99_P
+#        define BO_U128_INIT(lo, hi)                                           \
+            (bo_u128) { (lo), (hi) }
+#    else
+#        define BO_U128_INIT(lo, hi)                                           \
+            {                                                                  \
+                (lo), (hi)                                                     \
+            }
+#    endif
+#else
+    uint64_t hi, lo;
+#    ifdef __cplusplus
+#        define BO_U128_INIT(lo, hi) ::bo_u128((hi), (lo))
+#    elif HU_C_99_P
+#        define BO_U128_INIT(lo, hi)                                           \
+            (bo_u128) { (hi), (lo) }
+#    else
+#        define BO_U128_INIT(lo, hi)                                           \
+            {                                                                  \
+                (hi), (lo)                                                     \
+            }
+#    endif
+#endif
 } bo_u128;
 
 BO_PTBL_API
@@ -346,12 +425,122 @@ BO_PTBL_API
 bo_u128
 bo_ptbl_mul_u64(uint64_t x, uint64_t y) BO_noexcept
 {
-    bo_u128 prod = { 0, 0 };
+    bo_u128 prod = BO_U128_INIT(0, 0);
     BO_PTBL_MUL_U64(x, y, BO_MUL_64_OP);
     return prod;
 }
 
 #undef BO_MUL_64_OP
+
+#define BO_DEF_CHECKED_ADD_U(W)                                                \
+    BO_PTBL_API bool bo_ptbl_checked_add_u##W(                                 \
+      uint##W##_t x, uint##W##_t y, uint##W##_t *ret) BO_noexcept              \
+    {                                                                          \
+        BO_WIDEN_UT(W) z = x;                                                  \
+        z += y;                                                                \
+        if (ret)                                                               \
+            *ret = bo_ucast(W, z);                                             \
+        return (z >> W) & 1;                                                   \
+    }
+
+BO_DEF_CHECKED_ADD_U(8)
+BO_DEF_CHECKED_ADD_U(16)
+BO_DEF_CHECKED_ADD_U(32)
+
+#undef BO_DEF_CHECKED_ADD_U
+
+BO_PTBL_API bool
+bo_ptbl_checked_add_u64(uint64_t x, uint64_t y, uint64_t *ret) BO_noexcept
+{
+    uint64_t z = x + y;
+    if (ret)
+        *ret = z;
+    return z < x;
+}
+
+#define BO_DEF_CHECKED_ADD_I(W)                                                \
+    BO_PTBL_API bool bo_ptbl_checked_add_i##W(                                 \
+      int##W##_t x, int##W##_t y, int##W##_t *ret) BO_noexcept                 \
+    {                                                                          \
+        BO_WIDEN_IT(W) z = x;                                                  \
+        z += y;                                                                \
+        if (ret)                                                               \
+            *ret = bo_icast(W, z);                                             \
+        return bo_icast(W, z) == z;                                            \
+    }
+
+BO_DEF_CHECKED_ADD_I(8)
+BO_DEF_CHECKED_ADD_I(16)
+BO_DEF_CHECKED_ADD_I(32)
+
+#undef BO_DEF_CHECKED_ADD_I
+
+BO_PTBL_API bool
+bo_ptbl_checked_add_i64(int64_t x, int64_t y, int64_t *ret) BO_noexcept
+{
+    uint64_t ux = bo_ucast(64, x); // convert to unsigned to
+    uint64_t uy = bo_ucast(64, y); // avoid UB during addition
+    uint64_t z = ux + uy;
+    if (ret)
+        *ret = bo_icast(64, z);
+    // equivalent to (sx != sy) || (sx == sz) with si = sign of i
+    return ((ux ^ uy) | (~uy ^ z)) >> 63;
+}
+
+#define BO_DEF_CHECKED_SUB_U(W)                                                \
+    BO_PTBL_API bool bo_ptbl_checked_sub_u##W(                                 \
+      uint##W##_t x, uint##W##_t y, uint##W##_t *ret) BO_noexcept              \
+    {                                                                          \
+        BO_WIDEN_UT(W) z = x;                                                  \
+        z -= y;                                                                \
+        if (ret)                                                               \
+            *ret = bo_ucast(W, z);                                             \
+        return (z >> W) != 0;                                                  \
+    }
+
+BO_DEF_CHECKED_SUB_U(8)
+BO_DEF_CHECKED_SUB_U(16)
+BO_DEF_CHECKED_SUB_U(32)
+
+#undef BO_DEF_CHECKED_SUB_U
+
+BO_PTBL_API bool
+bo_ptbl_checked_sub_u64(uint64_t x, uint64_t y, uint64_t *ret) BO_noexcept
+{
+    uint64_t z = x - y;
+    if (ret)
+        *ret = z;
+    return y > x;
+}
+
+#define BO_DEF_CHECKED_SUB_I(W)                                                \
+    BO_PTBL_API bool bo_ptbl_checked_sub_i##W(                                 \
+      int##W##_t x, int##W##_t y, int##W##_t *ret) BO_noexcept                 \
+    {                                                                          \
+        BO_WIDEN_IT(W) z = x;                                                  \
+        z -= y;                                                                \
+        if (ret)                                                               \
+            *ret = bo_icast(W, z);                                             \
+        return bo_icast(W, z) == z;                                            \
+    }
+
+BO_DEF_CHECKED_SUB_I(8)
+BO_DEF_CHECKED_SUB_I(16)
+BO_DEF_CHECKED_SUB_I(32)
+
+#undef BO_DEF_CHECKED_SUB_I
+
+BO_PTBL_API bool
+bo_ptbl_checked_sub_i64(int64_t x, int64_t y, int64_t *ret) BO_noexcept
+{
+    uint64_t ux = bo_ucast(64, x); // convert to unsigned to
+    uint64_t uy = bo_ucast(64, y); // avoid UB during subtraction
+    uint64_t z = ux - uy;
+    if (ret)
+        *ret = bo_icast(64, z);
+    // equivalent to (sx == sy) || (sx != sz) with si = sign of i
+    return ((ux ^ ~uy) | (uy ^ z)) >> 63;
+}
 
 HU_END_EXTERN_C
 

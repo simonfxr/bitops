@@ -27,6 +27,7 @@
 #define BO_cexpr_if_1 BO_cexpr
 
 #define BO_INTRIN_API(CEXPR_P) BO_cexpr_if(CEXPR_P) BO_PTBL_API_WO_CEXPR
+#define BO_INTRIN_API_WO_CEXPR BO_PTBL_API_WO_CEXPR
 
 #if HU_ARCH_X86_P && hu_has_include(<x86intrin.h>)
 #    include <x86intrin.h>
@@ -310,9 +311,9 @@ bo_ctz_u32(uint32_t x) BO_noexcept
 #    define BO_CTZ_U16_CEXPR_P 1
 #    define BO_HAVE_CTZ_U16_INTRIN_P() 1
 #elif BO_HAVE_CTZ_U32_INTRIN_P()
-#    define BO_CTZ_U16_IMPL(x) return BO_CTZNZ_U32_IMPL((x) | 0x10000u)
+#    define BO_CTZNZ_U16_IMPL(x) BO_CTZNZ_U32_IMPL((x) | 0x10000u)
 #    define BO_CTZ_U16_CEXPR_P BO_CTZ_U32_CEXPR_P
-#    define BO_CTZNZ_U16_IMPL BO_CTZNZ_U32_IMPL
+#    define BO_CTZ_U16_IMPL(x) return BO_CTZNZ_U16_IMPL(x)
 #    define BO_HAVE_CTZ_U16_INTRIN_P() 1
 #else
 #    define BO_CTZ_U16_IMPL(x) return bo_ptbl_ctz_u16(x)
@@ -394,10 +395,10 @@ bo_clz_u32(uint32_t x) BO_noexcept
 #    define BO_CLZ_U16_CEXPR_P 1
 #    define BO_HAVE_CLZ_U16_INTRIN_P() 1
 #elif BO_HAVE_CLZ_U32_INTRIN_P()
-#    define BO_CLZ_U16_IMPL(x)                                                 \
-        return BO_CLZNZ_U32_IMPL((bo_ucast(32, x) << 16) | 0x8000u)
+#    define BO_CLZNZ_U16_IMPL(x)                                               \
+        BO_CLZNZ_U32_IMPL((bo_ucast(32, x) << 16) | 0x8000u)
+#    define BO_CLZ_U16_IMPL(x) return BO_CLZNZ_U16_IMPL(x)
 #    define BO_CLZ_U16_CEXPR_P BO_CLZ_U32_CEXPR_P
-#    define BO_CLZNZ_U16_IMPL BO_CLZNZ_U32_IMPL
 #    define BO_HAVE_CLZ_U16_INTRIN_P() 1
 #else
 #    define BO_CLZ_U16_IMPL(x) return bo_ptbl_clz_u16(x)
@@ -509,7 +510,13 @@ bo_parity_u64(uint64_t x) BO_noexcept
     return BO_PARITY_U64_IMPL(x);
 }
 
-#if defined(__SIZEOF_INT128__)
+#ifdef __SIZEOF_INT128__
+#    define BO_HAVE_INT128_P 1
+#else
+#    define BO_HAVE_INT128_P 0
+#endif
+
+#if BO_HAVE_INT128_P
 #    define BO_MUL_U64_IMPL(x, y)                                              \
         do {                                                                   \
             unsigned __int128 xy = bo_cast(unsigned __int128, x) * (y);        \

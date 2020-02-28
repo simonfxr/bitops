@@ -17,8 +17,63 @@ namespace bo {
 #endif
 
 #define BO_CXX_API(CEXPR_P) BO_INTRIN_API(CEXPR_P)
+#define BO_CXX_API_CEXPR BO_INTRIN_API(1)
 
-typedef unsigned long long bo_ull_t;
+template<typename T>
+struct widen_int;
+
+template<typename T>
+using widen_int_t = typename widen_int<T>::type;
+
+template<typename T>
+struct narrow_int;
+
+template<typename T>
+using narrow_int_t = typename narrow_int<T>::type;
+
+#define BO_DEF_WIDEN_INT(T, WT)                                                \
+    template<>                                                                 \
+    struct widen_int<T>                                                        \
+    {                                                                          \
+        using type = WT;                                                       \
+    }
+
+#define BO_DEF_NARROW_INT(T, WT)                                               \
+    template<>                                                                 \
+    struct narrow_int<WT>                                                      \
+    {                                                                          \
+        using type = T;                                                        \
+    }
+
+#define BO_DEF_WIDEN_NARROW_INT(T, UT, WT, UWT)                                \
+    BO_DEF_WIDEN_INT(T, WT);                                                   \
+    BO_DEF_WIDEN_INT(UT, UWT);                                                 \
+    BO_DEF_NARROW_INT(T, WT);                                                  \
+    BO_DEF_NARROW_INT(UT, UWT)
+
+BO_DEF_WIDEN_NARROW_INT(int8_t, uint8_t, int16_t, uint16_t);
+BO_DEF_WIDEN_NARROW_INT(int16_t, uint16_t, int32_t, uint32_t);
+BO_DEF_WIDEN_NARROW_INT(int32_t, uint32_t, int64_t, uint64_t);
+
+#if BO_HAVE_INT128_P && HU_SIZEOF_LONG == 8
+BO_DEF_WIDEN_NARROW_INT(long, unsigned long, __int128, unsigned __int128);
+#endif
+
+#if BO_HAVE_INT128_P && HU_SIZEOF_LONG_LONG == 8
+BO_DEF_WIDEN_INT(long long, __int128);
+BO_DEF_WIDEN_INT(unsigned long long, unsigned __int128);
+#    if HU_SIZEOF_LONG < 8
+BO_DEF_NARROW_INT(long long, __int128);
+BO_DEF_NARROW_INT(unsigned long long, unsigned __int128);
+#    endif
+#endif
+
+template<typename T>
+BO_CXX_API_CEXPR widen_int_t<T>
+widen(T x) noexcept
+{
+    return x;
+}
 
 BO_CXX_API(BO_POPCNT_U8_CEXPR_P)
 int
@@ -57,7 +112,7 @@ popcnt(unsigned long x) noexcept
 
 BO_CXX_API(BO_POPCNT_U64_CEXPR_P)
 int
-popcnt(bo_ull_t x) noexcept
+popcnt(unsigned long long x) noexcept
 {
     return bo_popcnt_u64(x);
 }
@@ -105,8 +160,8 @@ bswap(unsigned long x) noexcept
 }
 
 BO_CXX_API(BO_BSWAP_U64_CEXPR_P)
-bo_ull_t
-bswap(bo_ull_t x) noexcept
+unsigned long long
+bswap(unsigned long long x) noexcept
 {
     return bo_bswap_u64(x);
 }
@@ -155,8 +210,8 @@ rev(unsigned long x) noexcept
 }
 
 BO_CXX_API(BO_REV_U64_CEXPR_P)
-bo_ull_t
-rev(bo_ull_t x) noexcept
+unsigned long long
+rev(unsigned long long x) noexcept
 {
     return bo_rev_u64(x);
 }
@@ -206,7 +261,7 @@ ctz(unsigned long x) noexcept
 
 BO_CXX_API(BO_CTZ_U64_CEXPR_P)
 int
-ctz(bo_ull_t x) noexcept
+ctz(unsigned long long x) noexcept
 {
     return bo_ctz_u64(x);
 }
@@ -255,7 +310,7 @@ clz(unsigned long x) noexcept
 
 BO_CXX_API(BO_CLZ_U64_CEXPR_P)
 int
-clz(bo_ull_t x) noexcept
+clz(unsigned long long x) noexcept
 {
     return bo_clz_u64(x);
 }
@@ -304,7 +359,7 @@ parity(unsigned long x) noexcept
 
 BO_CXX_API(BO_PARITY_U64_CEXPR_P)
 bool
-parity(bo_ull_t x) noexcept
+parity(unsigned long long x) noexcept
 {
     return bo_parity_u64(x);
 }

@@ -10,5 +10,7 @@ main()
         TEST("popcnt") { equal(bo::popcnt(uint8_t(42)), 3); }
     }
 
+#include "shared_tests.h"
+
     TEST_EXIT();
 }
