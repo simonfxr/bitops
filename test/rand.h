@@ -7,7 +7,7 @@
 
 // The following code can be found here:
 // https://www.pcg-random.org/download.html
-// It has bin slightly modifed to silence implicit type conversion warnings.
+// It has been slightly modifed to silence implicit type conversion warnings.
 // The snippet extends until END PCG32
 // BEGIN PCG32
 

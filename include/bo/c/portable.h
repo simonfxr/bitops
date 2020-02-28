@@ -117,19 +117,19 @@ HU_BEGIN_EXTERN_C
 
 #define BO_PTBL_API BO_cexpr BO_PTBL_API_WO_CEXPR
 
-#define BO_DEF_I_FWD(W, nm)                                                    \
+#define BO_DEF_PTBL_I_FWD(W, nm)                                               \
     BO_PTBL_API int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x) BO_noexcept       \
     {                                                                          \
         return bo_icast(W, bo_ptbl_##nm##_u##W(bo_ucast(W, x)));               \
     }
 
-#define BO_DEF_I_FWD_BOOL(W, nm)                                               \
+#define BO_DEF_PTBL_I_FWD_BOOL(W, nm)                                          \
     BO_PTBL_API bool bo_ptbl_##nm##_i##W(int##W##_t x) BO_noexcept             \
     {                                                                          \
         return bo_ptbl_##nm##_u##W(bo_ucast(W, x));                            \
     }
 
-#define BO_DEF_I_FWD_INT(W, nm)                                                \
+#define BO_DEF_PTBL_I_FWD_INT(W, nm)                                           \
     BO_PTBL_API int bo_ptbl_##nm##_i##W(int##W##_t x) BO_noexcept              \
     {                                                                          \
         return bo_ptbl_##nm##_u##W(bo_ucast(W, x));                            \
@@ -152,7 +152,7 @@ BO_DEF_ALL(BO_DEF_PTBL_POPCNT)
 
 #undef BO_DEF_PTBL_POPCNT
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_INT, popcnt)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_INT, popcnt)
 
 #define BO_DEF_ROL(W)                                                          \
     BO_PTBL_API uint##W##_t bo_ptbl_rol_u##W(uint##W##_t x, int n) BO_noexcept \
@@ -165,14 +165,14 @@ BO_DEF_ALL(BO_DEF_ROL)
 
 #undef BO_DEF_ROL
 
-#define BO_DEF_I_FWD_I(W, nm)                                                  \
+#define BO_DEF_PTBL_I_FWD_I(W, nm)                                             \
     BO_PTBL_API int##W##_t bo_ptbl_##nm##_i##W(int##W##_t x, int n)            \
       BO_noexcept                                                              \
     {                                                                          \
         return bo_icast(W, bo_ptbl_##nm##_u##W(bo_ucast(W, x), n));            \
     }
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_I, rol)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_I, rol)
 
 #define BO_DEF_ROR(W)                                                          \
     BO_PTBL_API uint##W##_t bo_ptbl_ror_u##W(uint##W##_t x, int n) BO_noexcept \
@@ -185,7 +185,7 @@ BO_DEF_ALL(BO_DEF_ROR)
 
 #undef BO_DEF_ROR
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_I, ror)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_I, ror)
 
 BO_PTBL_API uint8_t
 bo_ptbl_bswap_u8(uint8_t x) BO_noexcept
@@ -214,7 +214,7 @@ bo_ptbl_bswap_u64(uint64_t x) BO_noexcept
     return bo_ptbl_rol_u64(x, 32);
 }
 
-BO_DEF_ALL_1(BO_DEF_I_FWD, bswap)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD, bswap)
 
 #define BO_BYTE_REV_STEP(W, M, S)                                              \
     bo_ucast(W, ((x & BO_BMASK(W, M)) << S) | ((x >> S) & BO_BMASK(W, M)))
@@ -247,7 +247,7 @@ BO_DEF_PTBL_REV(64)
 
 #undef BO_DEF_PTBL_REV
 
-BO_DEF_ALL_1(BO_DEF_I_FWD, rev)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD, rev)
 
 #define BO_DEF_PTBL_CTZ(W)                                                     \
     BO_PTBL_API int bo_ptbl_ctz_u##W(uint##W##_t x) BO_noexcept                \
@@ -265,7 +265,7 @@ BO_DEF_ALL(BO_DEF_PTBL_CTZ)
 
 #undef BO_DEF_PTBL_CTZ
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_INT, ctz)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_INT, ctz)
 
 #define BO_DEF_PTBL_CLZ(W)                                                     \
     BO_PTBL_API int bo_ptbl_clz_u##W(uint##W##_t x) BO_noexcept                \
@@ -282,7 +282,7 @@ BO_DEF_ALL(BO_DEF_PTBL_CLZ)
 
 #undef BO_DEF_PTBL_CLZ
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_INT, clz)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_INT, clz)
 
 #define BO_DEF_IS_POW2(W)                                                      \
     BO_PTBL_API bool bo_ptbl_is_pow2_u##W(uint##W##_t x) BO_noexcept           \
@@ -294,7 +294,7 @@ BO_DEF_ALL(BO_DEF_IS_POW2)
 
 #undef BO_DEF_IS_POW2
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_INT, is_pow2)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_INT, is_pow2)
 
 #define BO_DEF_PTBL_ROUND_POW2(W)                                              \
     BO_PTBL_API uint##W##_t bo_ptbl_round_pow2_u##W(uint##W##_t x) BO_noexcept \
@@ -328,7 +328,7 @@ BO_DEF_ALL(BO_DEF_PTBL_PARITY)
 
 #undef BO_DEF_PTBL_PARITY
 
-BO_DEF_ALL_1(BO_DEF_I_FWD_BOOL, parity)
+BO_DEF_ALL_1(BO_DEF_PTBL_I_FWD_BOOL, parity)
 
 typedef struct bo_u128
 {
@@ -440,7 +440,7 @@ bo_ptbl_mul_u64(uint64_t x, uint64_t y) BO_noexcept
         z += y;                                                                \
         if (ret)                                                               \
             *ret = bo_ucast(W, z);                                             \
-        return (z >> W) & 1;                                                   \
+        return (z >> W) == 0;                                                  \
     }
 
 BO_DEF_CHECKED_ADD_U(8)
@@ -455,7 +455,7 @@ bo_ptbl_checked_add_u64(uint64_t x, uint64_t y, uint64_t *ret) BO_noexcept
     uint64_t z = x + y;
     if (ret)
         *ret = z;
-    return z < x;
+    return z >= x;
 }
 
 #define BO_DEF_CHECKED_ADD_I(W)                                                \
@@ -495,7 +495,7 @@ bo_ptbl_checked_add_i64(int64_t x, int64_t y, int64_t *ret) BO_noexcept
         z -= y;                                                                \
         if (ret)                                                               \
             *ret = bo_ucast(W, z);                                             \
-        return (z >> W) != 0;                                                  \
+        return (z >> W) == 0;                                                  \
     }
 
 BO_DEF_CHECKED_SUB_U(8)
@@ -510,7 +510,7 @@ bo_ptbl_checked_sub_u64(uint64_t x, uint64_t y, uint64_t *ret) BO_noexcept
     uint64_t z = x - y;
     if (ret)
         *ret = z;
-    return y > x;
+    return y <= x;
 }
 
 #define BO_DEF_CHECKED_SUB_I(W)                                                \

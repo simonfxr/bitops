@@ -3,7 +3,17 @@
     do {                                                                       \
     } while (0)
 
-#define TEST_CONSISTENT_F_UI_W(F, UI, W)                                       \
+#define TEST_CONSISTENT_UI_F(UI, F, ...)                                       \
+    F(UI, 8, __VA_ARGS__);                                                     \
+    F(UI, 16, __VA_ARGS__);                                                    \
+    F(UI, 32, __VA_ARGS__);                                                    \
+    F(UI, 64, __VA_ARGS__)
+
+#define TEST_CONSISTENT_F(...)                                                 \
+    TEST_CONSISTENT_UI_F(u, __VA_ARGS__);                                      \
+    TEST_CONSISTENT_UI_F(i, __VA_ARGS__)
+
+#define TEST_CONSISTENT_UI_W_F1(UI, W, F)                                      \
     TEST(#F "_" #UI #W)                                                        \
     {                                                                          \
         for (int i = 0; !TEST_FAILED && i < RAND_ITER; ++i) {                  \
@@ -13,19 +23,26 @@
     }                                                                          \
     REQUIRE_SEMI()
 
-#define TEST_CONSISTENT_F_UI(F, UI)                                            \
-    TEST_CONSISTENT_F_UI_W(F, UI, 8);                                          \
-    TEST_CONSISTENT_F_UI_W(F, UI, 16);                                         \
-    TEST_CONSISTENT_F_UI_W(F, UI, 32);                                         \
-    TEST_CONSISTENT_F_UI_W(F, UI, 64)
+#define TEST_CONSISTENT_UI_W_F3(UI, W, F)                                      \
+    TEST(#F "_" #UI #W)                                                        \
+    {                                                                          \
+        for (int i = 0; !TEST_FAILED && i < RAND_ITER; ++i) {                  \
+            BO_TYPE_UI_W(UI, W) x = RAND_UI_W(UI, W);                          \
+            BO_TYPE_UI_W(UI, W) y = RAND_UI_W(UI, W);                          \
+            BO_TYPE_UI_W(UI, W) z1, z2;                                        \
+            equal(bo_ptbl_##F##_##UI##W(x, y, &z1),                            \
+                  bo_##F##_##UI##W(x, y, &z2));                                \
+            equal(z1, z2);                                                     \
+        }                                                                      \
+    }                                                                          \
+    REQUIRE_SEMI()
 
-#define TEST_CONSISTENT_F(F)                                                   \
-    TEST_CONSISTENT_F_UI(F, u);                                                \
-    TEST_CONSISTENT_F_UI(F, i)
+#define TEST_CONSISTENT_F1(F) TEST_CONSISTENT_F(TEST_CONSISTENT_UI_W_F1, F)
+#define TEST_CONSISTENT_F3(F) TEST_CONSISTENT_F(TEST_CONSISTENT_UI_W_F3, F)
 
 TEST_GROUP("portable")
 {
-    TEST("popcnt") { equal(bo_ptbl_popcnt_u8((uint8_t) 13), 3); }
+    TEST("popcnt") { equal(bo_ptbl_popcnt_u8(13), 3); }
 
     TEST("mul_u64")
     {
@@ -40,10 +57,12 @@ TEST_GROUP("portable")
 
 TEST_GROUP("consistency")
 {
-    TEST_CONSISTENT_F_UI(popcnt, u);
-    TEST_CONSISTENT_F_UI(bswap, u);
-    TEST_CONSISTENT_F_UI(rev, u);
-    TEST_CONSISTENT_F_UI(ctz, u);
-    TEST_CONSISTENT_F_UI(clz, u);
-    TEST_CONSISTENT_F_UI(parity, u);
+    TEST_CONSISTENT_F1(popcnt);
+    TEST_CONSISTENT_F1(bswap);
+    TEST_CONSISTENT_F1(rev);
+    TEST_CONSISTENT_F1(ctz);
+    TEST_CONSISTENT_F1(clz);
+    TEST_CONSISTENT_F1(parity);
+    TEST_CONSISTENT_F3(checked_add);
+    TEST_CONSISTENT_F3(checked_sub);
 }

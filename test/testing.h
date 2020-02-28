@@ -4,6 +4,7 @@
 #include <hu/annotations.h>
 #include <hu/macros.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,7 +33,7 @@ static pcg32_random_t RNG;
 #define assertMsg(b, msg)                                                      \
     if (!(b)) {                                                                \
         test_signal_failure(TEST_GROUP_NAME, TEST_NAME, __LINE__, msg);        \
-        test_failed();                                                         \
+        TEST_FAILED = 1;                                                       \
         continue;                                                              \
     }                                                                          \
     do {                                                                       \
@@ -40,6 +41,16 @@ static pcg32_random_t RNG;
 
 #define assert(b) assertMsg(b, "Expression is false: " #b)
 #define equal(a, b) assertMsg((a) == (b), "Values do not match: " #a " != " #b)
+
+static void
+rand_init()
+{
+    RAND_SEED = hu_reinterpret_cast(uintptr_t, &printf);
+    RAND_SEED *= 0xe61e4796a3073275ull;
+    RAND_SEED ^= hu_reinterpret_cast(uintptr_t, &errno);
+    printf("*** Using random seed: 0x%llx\n",
+           hu_static_cast(unsigned long long, RAND_SEED));
+}
 
 static const char *
 test_begin(const char *test_group, const char *test)
@@ -50,12 +61,6 @@ test_begin(const char *test_group, const char *test)
     s0 = djb2_strhash(s0, test);
     RNG = rng_derive(RAND_SEED, s0);
     return test;
-}
-
-static void
-test_failed()
-{
-    TEST_FAILED = 1;
 }
 
 static int
@@ -101,7 +106,7 @@ test_exit()
 #endif
 
 #define RAND_W_u(W) bo_ucast(W, rng_rand_un(&RNG, W))
-#define RAND_W_i(W) bo_icast(W, rng_rand_un(&RNG, W))
+#define RAND_W_i(W) bo_icast(W, rng_rand_in(&RNG, W))
 #define RAND_UI_W(UI, W) BO_AP(BO_CAT(RAND_W_, UI), W)
 
 #endif

@@ -36,6 +36,13 @@
 #    define BO_HAVE_X86_INTRIN_H_P 0
 #endif
 
+#if HU_ARCH_X86_P && hu_has_include(<immintrin.h>)
+#    include <immintrin.h>
+#    define BO_HAVE_X86_IMMINTRIN_H_P 1
+#else
+#    define BO_HAVE_X86_IMMINTRIN_H_P 0
+#endif
+
 #if HU_COMP_MSVC_P
 #    include <intrin.h>
 #    include <stdlib.h> // _byteswap_XXX
@@ -152,9 +159,35 @@ bo_popcnt_u64(uint64_t x) BO_noexcept
     return BO_POPCNT_U64_IMPL(x);
 }
 
+#define BO_INTRIN_API_F_W(F, W)                                                \
+    BO_INTRIN_API(BO_CAT1(BO_CAT1(BO_CAT1(BO_CAT1(BO_, F), _U), W), _CEXPR_P))
+
+#define BO_DEF_I_FWD(W, nm, nmu)                                               \
+    BO_INTRIN_API_F_W(nmu, W)                                                  \
+    int##W##_t bo_##nm##_i##W(int##W##_t x) BO_noexcept                        \
+    {                                                                          \
+        return bo_icast(W, bo_##nm##_u##W(bo_ucast(W, x)));                    \
+    }
+
+#define BO_DEF_I_FWD_INT(W, nm, nmu)                                           \
+    BO_INTRIN_API_F_W(nmu, W)                                                  \
+    int bo_##nm##_i##W(int##W##_t x) BO_noexcept                               \
+    {                                                                          \
+        return bo_##nm##_u##W(bo_ucast(W, x));                                 \
+    }
+
+#define BO_DEF_I_FWD_BOOL(W, nm, nmu)                                          \
+    BO_INTRIN_API_F_W(nmu, W)                                                  \
+    bool bo_##nm##_i##W(int##W##_t x) BO_noexcept                              \
+    {                                                                          \
+        return bo_##nm##_u##W(bo_ucast(W, x));                                 \
+    }
+
+BO_DEF_ALL_1(BO_DEF_I_FWD_INT, popcnt, POPCNT)
+
 #define BO_BSWAP_U8_CEXPR_P 1
 
-BO_INTRIN_API(BO_POPCNT_U8_CEXPR_P)
+BO_INTRIN_API(BO_BSWAP_U8_CEXPR_P)
 uint8_t
 bo_bswap_u8(uint8_t x) BO_noexcept
 {
@@ -217,11 +250,13 @@ bo_bswap_u64(uint64_t x) BO_noexcept
     return BO_BSWAP_U64_IMPL(x);
 }
 
+BO_DEF_ALL_1(BO_DEF_I_FWD, bswap, BSWAP)
+
 #if hu_has_builtin(__builtin_bitreverse8)
-#    define BO_REV_U8_IMPL(x) return __builtin_bitreverse8(x);
+#    define BO_REV_U8_IMPL(x) return __builtin_bitreverse8(x)
 #    define BO_REV_U8_CEXPR_P 0
 #else
-#    define BO_REV_U8_IMPL(x) return bo_ptbl_rev_u8(x);
+#    define BO_REV_U8_IMPL(x) return bo_ptbl_rev_u8(x)
 #    define BO_REV_U8_CEXPR_P BO_PTBL_CEXPR_P
 #endif
 
@@ -229,16 +264,16 @@ BO_INTRIN_API(BO_REV_U8_CEXPR_P)
 uint8_t
 bo_rev_u8(uint8_t x) BO_noexcept
 {
-    BO_REV_U8_IMPL(x)
+    BO_REV_U8_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_bitreverse16)
-#    define BO_REV_U16_IMPL(x) return __builtin_bitreverse16(x);
+#    define BO_REV_U16_IMPL(x) return __builtin_bitreverse16(x)
 #    define BO_REV_U16_CEXPR_P 0
 #else
 #    define BO_REV_U16_IMPL(x)                                                 \
         BO_BYTE_REV(16);                                                       \
-        return bo_bswap_u16(x);
+        return bo_bswap_u16(x)
 #    define BO_REV_U16_CEXPR_P BO_PTBL_CEXPR_P
 #endif
 
@@ -246,16 +281,16 @@ BO_INTRIN_API(BO_REV_U16_CEXPR_P)
 uint16_t
 bo_rev_u16(uint16_t x) BO_noexcept
 {
-    BO_REV_U16_IMPL(x)
+    BO_REV_U16_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_bitreverse32)
-#    define BO_REV_U32_IMPL(x) return __builtin_bitreverse32(x);
+#    define BO_REV_U32_IMPL(x) return __builtin_bitreverse32(x)
 #    define BO_REV_U32_CEXPR_P 0
 #else
 #    define BO_REV_U32_IMPL(x)                                                 \
         BO_BYTE_REV(32);                                                       \
-        return bo_bswap_u32(x);
+        return bo_bswap_u32(x)
 #    define BO_REV_U32_CEXPR_P BO_PTBL_CEXPR_P
 #endif
 
@@ -263,16 +298,16 @@ BO_INTRIN_API(BO_REV_U32_CEXPR_P)
 uint32_t
 bo_rev_u32(uint32_t x) BO_noexcept
 {
-    BO_REV_U32_IMPL(x)
+    BO_REV_U32_IMPL(x);
 }
 
 #if hu_has_builtin(__builtin_bitreverse64)
-#    define BO_REV_U64_IMPL(x) return __builtin_bitreverse64(x);
+#    define BO_REV_U64_IMPL(x) return __builtin_bitreverse64(x)
 #    define BO_REV_U64_CEXPR_P 0
 #else
 #    define BO_REV_U64_IMPL(x)                                                 \
         BO_BYTE_REV(64);                                                       \
-        return bo_bswap_u64(x);
+        return bo_bswap_u64(x)
 #    define BO_REV_U64_CEXPR_P BO_PTBL_CEXPR_P
 #endif
 
@@ -280,8 +315,10 @@ BO_INTRIN_API(BO_REV_U64_CEXPR_P)
 uint64_t
 bo_rev_u64(uint64_t x) BO_noexcept
 {
-    BO_REV_U64_IMPL(x)
+    BO_REV_U64_IMPL(x);
 }
+
+BO_DEF_ALL_1(BO_DEF_I_FWD, rev, REV)
 
 #if hu_has_builtin(__builtin_ctz) || HU_COMP_GNUC_P
 #    define BO_CTZNZ_U32_IMPL(x) __builtin_ctz(x)
@@ -296,9 +333,7 @@ bo_rev_u64(uint64_t x) BO_noexcept
 #    define BO_HAVE_CTZ_U32_INTRIN_P() 0
 #endif
 
-BO_INTRIN_API(BO_CTZ_U32_CEXPR_P)
-int
-bo_ctz_u32(uint32_t x) BO_noexcept
+BO_INTRIN_API(BO_CTZ_U32_CEXPR_P) int bo_ctz_u32(uint32_t x) BO_noexcept
 {
     BO_CTZ_U32_IMPL(x);
 }
@@ -367,6 +402,8 @@ bo_ctz_u64(uint64_t x) BO_noexcept
     BO_CTZ_U64_IMPL(x);
 }
 
+BO_DEF_ALL_1(BO_DEF_I_FWD_INT, ctz, CTZ)
+
 #if hu_has_builtin(__builtin_clz) || HU_COMP_GNUC_P
 #    define BO_CLZNZ_U32_IMPL(x) __builtin_clz(x)
 #    define BO_CLZ_U32_IMPL(x)                                                 \
@@ -380,9 +417,7 @@ bo_ctz_u64(uint64_t x) BO_noexcept
 #    define BO_HAVE_CLZ_U32_INTRIN_P() 0
 #endif
 
-BO_INTRIN_API(BO_CLZ_U32_CEXPR_P)
-int
-bo_clz_u32(uint32_t x) BO_noexcept
+BO_INTRIN_API(BO_CLZ_U32_CEXPR_P) int bo_clz_u32(uint32_t x) BO_noexcept
 {
     BO_CLZ_U32_IMPL(x);
 }
@@ -454,6 +489,8 @@ bo_clz_u64(uint64_t x) BO_noexcept
     BO_CLZ_U64_IMPL(x);
 }
 
+BO_DEF_ALL_1(BO_DEF_I_FWD_INT, clz, CLZ)
+
 #if hu_has_builtin(__builtin_parity) || HU_COMP_GNUC_P
 #    define BO_PARITY_U32_IMPL(x) __builtin_parity((x))
 #    define BO_PARITY_U32_CEXPR_P 1
@@ -509,6 +546,47 @@ bo_parity_u64(uint64_t x) BO_noexcept
 {
     return BO_PARITY_U64_IMPL(x);
 }
+
+BO_DEF_ALL_1(BO_DEF_I_FWD_BOOL, parity, PARITY)
+
+#define BO_DEF_CHECKED_OP(W, UI, nm, OP)                                       \
+    BO_PTBL_API                                                                \
+    bool bo_checked_##nm##_##UI##W(BO_TYPE_UI_W(UI, W) x,                      \
+                                   BO_TYPE_UI_W(UI, W) y,                      \
+                                   BO_TYPE_UI_W(UI, W) * z) BO_noexcept        \
+    {                                                                          \
+        OP(W, UI);                                                             \
+    }
+
+#if HU_GNUC_PREREQ(5, 0, 0) || hu_has_builtin(__builtin_add_overflow)
+#    define BO_DEF_CHECKED_ADD_OP(W, UI)                                       \
+        BO_TYPE_UI_W(UI, W) rr = 0;                                            \
+        bool ret = !__builtin_add_overflow(x, y, &rr);                         \
+        if (z)                                                                 \
+            *z = rr;                                                           \
+        return ret
+#else
+#    define BO_DEF_CHECKED_ADD_OP(W, UI)                                       \
+        return bo_ptbl_checked_add_##UI##W(x, y, z)
+#endif
+
+BO_DEF_ALL_1(BO_DEF_CHECKED_OP, u, add, BO_DEF_CHECKED_ADD_OP)
+BO_DEF_ALL_1(BO_DEF_CHECKED_OP, i, add, BO_DEF_CHECKED_ADD_OP)
+
+#if HU_GNUC_PREREQ(5, 0, 0) || hu_has_builtin(__builtin_sub_overflow)
+#    define BO_DEF_CHECKED_SUB_OP(W, UI)                                       \
+        BO_TYPE_UI_W(UI, W) rr = 0;                                            \
+        bool ret = !__builtin_sub_overflow(x, y, &rr);                         \
+        if (z)                                                                 \
+            *z = rr;                                                           \
+        return ret
+#else
+#    define BO_DEF_CHECKED_ADSUB_OP(W, UI)                                     \
+        return bo_ptbl_checked_sub_##UI##W(x, y, z)
+#endif
+
+BO_DEF_ALL_1(BO_DEF_CHECKED_OP, u, sub, BO_DEF_CHECKED_SUB_OP)
+BO_DEF_ALL_1(BO_DEF_CHECKED_OP, i, sub, BO_DEF_CHECKED_SUB_OP)
 
 #ifdef __SIZEOF_INT128__
 #    define BO_HAVE_INT128_P 1

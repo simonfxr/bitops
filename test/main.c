@@ -6,6 +6,7 @@
 int
 main()
 {
+    rand_init();
 #include "shared_tests.h"
     TEST_EXIT();
 }
