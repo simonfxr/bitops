@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include <hu.h>
+#include <hu/hu.h>
 
 // The following code can be found here:
 // https://www.pcg-random.org/download.html
@@ -80,38 +80,50 @@ static uint64_t
 rng_rand_un(pcg32_random_t *rng, unsigned nbits)
 {
     uint32_t x = pcg32_random_r(rng);
+    uint64_t ret;
     switch (x & 7) {
     case 0:
-        return 0;
+        ret = 0;
+        break;
     case 1:
-        return 1;
+        ret = 1;
+        break;
     case 2:
-        return 0xFFFFFFFFFFFFFFFFull;
+        ret = (1ull << nbits) - 1ull;
+        break;
     case 3:
-        return rng_randbits_un(rng, nbits);
+        ret = rng_randbits_un(rng, nbits);
+        break;
     default:
-        return rng_randbits_un(rng, (x >> 3) & (nbits - 1));
+        ret = rng_randbits_un(rng, (x >> 3) & (nbits - 1));
     }
+    return ret;
 }
 
 static int64_t
 rng_rand_in(pcg32_random_t *rng, unsigned nbits)
 {
     uint32_t x = pcg32_random_r(rng);
-    switch (x & 3) {
+    int64_t ret;
+    switch (x & 7) {
     case 0:
-        return 0;
+        ret = 0;
+        break;
     case 1:
-        return 1;
+        ret = 1;
+        break;
     case 2:
-        return -1;
+        ret = -1;
+        break;
     case 3:
-        return rng_randbits_in(rng, nbits);
+        ret = rng_randbits_in(rng, nbits);
+        break;
     default:
-        return rng_randbits_in(rng, (x >> 3) & (nbits - 1));
+        ret = rng_randbits_in(rng, (x >> 3) & (nbits - 1));
     }
+    return ret;
 }
 
-static const int RAND_ITER = 1013;
+static const int RAND_ITER = 7013;
 
 #endif

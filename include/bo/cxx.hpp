@@ -2,7 +2,7 @@
 #define BO_CXX_HPP
 
 #include <bo/c.h>
-#include <hu.h>
+#include <hu/hu.h>
 #include <type_traits>
 
 namespace bo {

@@ -1,13 +1,6 @@
 #ifndef BO_C_PORTABLE_H
 #define BO_C_PORTABLE_H
 
-#ifndef __cplusplus
-#    include <stdbool.h>
-#    include <stdint.h>
-#else
-#    include <cstdint>
-#endif
-
 #ifndef HU_LANG_H
 #    include <hu/lang.h>
 #endif
@@ -16,12 +9,28 @@
 #    include <hu/endian.h>
 #endif
 
+#ifndef HU_FEATURES_H
+#    include <hu/features.h>
+#endif
+
+#ifndef HU_ARCH_H
+#    include <hu/arch.h>
+#endif
+
+#ifndef __cplusplus
+#    include <stdbool.h>
+#endif
+
+#if defined(__cplusplus) && (!HU_ARCH_WASM_P || hu_has_include(<cstdint>))
+#    include <cstdint>
+#else
+#    include <stdint.h>
+#endif
+
 HU_BEGIN_EXTERN_C
 
 #define BO_CAT(x, y) x##y
 #define BO_CAT1(x, y) BO_CAT(x, y)
-#define BO_Q(...) (__VA_ARGS__)
-#define BO_NIL /* empty */
 
 #define BO_DEF_ALL(DEF) DEF(8) DEF(16) DEF(32) DEF(64)
 
@@ -138,6 +147,13 @@ HU_BEGIN_EXTERN_C
 #define BO_DEF_ALL_1(DEF, ...)                                                 \
     DEF(8, __VA_ARGS__)                                                        \
     DEF(16, __VA_ARGS__) DEF(32, __VA_ARGS__) DEF(64, __VA_ARGS__)
+
+/* MSVC does not like the above variadic macro in some cases, ugh... */
+#define BO_DEF_ALL_3(F, _1, _2)                                                \
+    F(8, _1, _2) F(16, _1, _2) F(32, _1, _2) F(64, _1, _2)
+
+#define BO_DEF_ALL_4(F, _1, _2, _3)                                            \
+    F(8, _1, _2, _3) F(16, _1, _2, _3) F(32, _1, _2, _3) F(64, _1, _2, _3)
 
 #define BO_DEF_PTBL_POPCNT(W)                                                  \
     BO_PTBL_API int bo_ptbl_popcnt_u##W(uint##W##_t x) BO_noexcept             \
@@ -349,7 +365,8 @@ typedef struct bo_u128
 #else
     uint64_t hi, lo;
 #    ifdef __cplusplus
-#        define BO_U128_INIT(lo, hi) ::bo_u128((hi), (lo))
+#        define BO_U128_INIT(lo, hi)                                           \
+            ::bo_u128 { (hi), (lo) }
 #    elif HU_C_99_P
 #        define BO_U128_INIT(lo, hi)                                           \
             (bo_u128) { (hi), (lo) }
