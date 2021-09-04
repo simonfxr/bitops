@@ -86,6 +86,13 @@
         return bo_##nm##_u##W(bo_ucast(W, x));                                 \
     }
 
+#define BO_DEF_I_FWD_I(W, nm, nmu)                                             \
+    BO_INTRIN_API_F_W(nmu, W)                                                  \
+    int##W##_t bo_##nm##_i##W(int##W##_t x, int n) BO_noexcept                 \
+    {                                                                          \
+        return bo_icast(W, bo_##nm##_u##W(bo_ucast(W, x), n));                 \
+    }
+
 HU_BEGIN_EXTERN_C
 
 #if BO_HAVE_CXX_BIT_H_P()
@@ -349,6 +356,14 @@ bo_asm_rev_u64(uint64_t x) BO_noexcept
         return (__builtin_constant_p(x) ? bo_ptbl_rev_u64(x)                   \
                                         : bo_asm_rev_u64(x))
 #    define BO_REV_U64_CEXPR_P 0
+#elif defined(BO_INTRIN_REV_U32_IMPL)
+#    define BO_REV_U64_IMPL(x)                                                 \
+        uint32_t lo = bo_ucast(32, x);                                         \
+        uint32_t hi = bo_ucast(32, (x) >> 32);                                 \
+        lo = BO_INTRIN_REV_U32_IMPL(lo, 32);                                   \
+        hi = BO_INTRIN_REV_U32_IMPL(hi, 32);                                   \
+        return (hu_ucast(64, lo) << 32) | hi;
+#    define BO_REV_U64_CEXPR_P BO_REV_U32_CEXPR_P
 #else
 #    define BO_REV_U64_IMPL(x)                                                 \
         BO_BYTE_REV(64);                                                       \
@@ -668,6 +683,138 @@ bo_mul_u64(uint64_t x, uint64_t y) BO_noexcept
     BO_MUL_U64_IMPL(x, y);
     return prod;
 }
+
+#if hu_has_builtin(__builtin_rotateleft8)
+#    define BO_ROL_U8_IMPL(x, n)                                               \
+        return __builtin_rotateleft8(x, bo_ucast(8, n & 7))
+#    define BO_ROL_U8_CEXPR_P 0
+#else
+#    define BO_ROL_U8_IMPL(x, n) return bo_ptbl_rol_u8(x, n)
+#    define BO_ROL_U8_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROL_U8_CEXPR_P)
+uint8_t
+bo_rol_u8(uint8_t x, int n) BO_noexcept
+{
+    BO_ROL_U8_IMPL(x, n);
+}
+
+#if hu_has_builtin(__builtin_rotateleft16)
+#    define BO_ROL_U16_IMPL(x, n)                                              \
+        return __builtin_rotateleft16(x, bo_ucast(8, n & 15))
+#    define BO_ROL_U16_CEXPR_P 0
+#else
+#    define BO_ROL_U16_IMPL(x, n) return bo_ptbl_rol_u16(x, n)
+#    define BO_ROL_U16_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROL_U16_CEXPR_P)
+uint16_t
+bo_rol_u16(uint16_t x, int n) BO_noexcept
+{
+    BO_ROL_U16_IMPL(x, n);
+}
+
+#if hu_has_builtin(__builtin_rotateleft32)
+#    define BO_ROL_U32_IMPL(x, n)                                              \
+        return __builtin_rotateleft32(x, bo_ucast(8, n & 31))
+#    define BO_ROL_U32_CEXPR_P 0
+#else
+#    define BO_ROL_U32_IMPL(x, n) return bo_ptbl_rol_u32(x, n)
+#    define BO_ROL_U32_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROL_U32_CEXPR_P)
+uint32_t
+bo_rol_u32(uint32_t x, int n) BO_noexcept
+{
+    BO_ROL_U32_IMPL(x, n);
+}
+
+#if hu_has_builtin(__builtin_rotateleft64)
+#    define BO_ROL_U64_IMPL(x, n)                                              \
+        return __builtin_rotateleft64(x, bo_ucast(8, n & 63))
+#    define BO_ROL_U64_CEXPR_P 0
+#else
+#    define BO_ROL_U64_IMPL(x, n) return bo_ptbl_rol_u64(x, n)
+#    define BO_ROL_U64_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROL_U64_CEXPR_P)
+uint64_t
+bo_rol_u64(uint64_t x, int n) BO_noexcept
+{
+    BO_ROL_U64_IMPL(x, n);
+}
+
+BO_DEF_ALL_3(BO_DEF_I_FWD_I, rol, ROL)
+
+#if hu_has_builtin(__builtin_rotateright8)
+#    define BO_ROR_U8_IMPL(x, n)                                               \
+        return __builtin_rotateright8(x, bo_ucast(8, n & 7))
+#    define BO_ROR_U8_CEXPR_P 0
+#else
+#    define BO_ROR_U8_IMPL(x, n) return bo_ptbl_ror_u8(x, n)
+#    define BO_ROR_U8_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROR_U8_CEXPR_P)
+uint8_t
+bo_ror_u8(uint8_t x, int n) BO_noexcept
+{
+    BO_ROR_U8_IMPL(x, n);
+}
+
+#if hu_has_builtin(__builtin_rotateright16)
+#    define BO_ROR_U16_IMPL(x, n)                                              \
+        return __builtin_rotateright16(x, bo_ucast(8, n & 15))
+#    define BO_ROR_U16_CEXPR_P 0
+#else
+#    define BO_ROR_U16_IMPL(x, n) return bo_ptbl_ror_u16(x, n)
+#    define BO_ROR_U16_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROR_U16_CEXPR_P)
+uint16_t
+bo_ror_u16(uint16_t x, int n) BO_noexcept
+{
+    BO_ROR_U16_IMPL(x, n);
+}
+
+#if hu_has_builtin(__builtin_rotateright32)
+#    define BO_ROR_U32_IMPL(x, n)                                              \
+        return __builtin_rotateright32(x, bo_ucast(8, n & 31))
+#    define BO_ROR_U32_CEXPR_P 0
+#else
+#    define BO_ROR_U32_IMPL(x, n) return bo_ptbl_ror_u32(x, n)
+#    define BO_ROR_U32_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROR_U32_CEXPR_P)
+uint32_t
+bo_ror_u32(uint32_t x, int n) BO_noexcept
+{
+    BO_ROR_U32_IMPL(x, n);
+}
+
+#if hu_has_builtin(__builtin_rotateright64)
+#    define BO_ROR_U64_IMPL(x, n)                                              \
+        return __builtin_rotateright64(x, bo_ucast(8, n & 63))
+#    define BO_ROR_U64_CEXPR_P 0
+#else
+#    define BO_ROR_U64_IMPL(x, n) return bo_ptbl_ror_u64(x, n)
+#    define BO_ROR_U64_CEXPR_P BO_PTBL_CEXPR_P
+#endif
+
+BO_INTRIN_API(BO_ROR_U64_CEXPR_P)
+uint64_t
+bo_ror_u64(uint64_t x, int n) BO_noexcept
+{
+    BO_ROR_U64_IMPL(x, n);
+}
+
+BO_DEF_ALL_3(BO_DEF_I_FWD_I, ror, ROR)
 
 HU_END_EXTERN_C
 

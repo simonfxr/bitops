@@ -1,3 +1,8 @@
 build-configs:
-- debug-clang-ninja
-- debug-gcc-ninja
+  - debug-clang-ninja
+  - debug-gcc-ninja-x86:
+      -DCMAKE_C_FLAGS: "-g -mbmi -mlzcnt"
+      -DCMAKE_CXX_FLAGS: "-g -mbmi -mlzcnt"
+  - release-gcc-ninja-x86:
+      -DCMAKE_C_FLAGS: "-O2 -mbmi -mlzcnt"
+      -DCMAKE_CXX_FLAGS: "-O2 -mbmi -mlzcnt"

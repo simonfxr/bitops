@@ -124,6 +124,18 @@ rng_rand_in(pcg32_random_t *rng, unsigned nbits)
     return ret;
 }
 
-static const int RAND_ITER = 7013;
+static const int RAND_ITER_PER_U16 = 3001;
+
+static inline int
+rand_iter_for_bits(unsigned bits)
+{
+    if (bits <= 8)
+        return 512;
+    if (bits <= 16)
+        return RAND_ITER_PER_U16;
+    if (bits <= 32)
+        return RAND_ITER_PER_U16 * RAND_ITER_PER_U16 / 16;
+    return RAND_ITER_PER_U16 * RAND_ITER_PER_U16;
+}
 
 #endif

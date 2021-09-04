@@ -371,6 +371,104 @@ parity(const T &x) noexcept
     return parity(static_cast<typename std::make_unsigned<T>::type>(x));
 }
 
+BO_CXX_API(BO_ROL_U8_CEXPR_P)
+unsigned char
+rol(unsigned char x, int n) noexcept
+{
+    return bo_rol_u8(x, n);
+}
+
+BO_CXX_API(BO_ROL_U8_CEXPR_P)
+char
+rol(char x, int n) noexcept
+{
+    return static_cast<char>(bo_rol_u8(static_cast<unsigned char>(x), n));
+}
+
+BO_CXX_API(BO_ROL_U16_CEXPR_P)
+unsigned short
+rol(unsigned short x, int n) noexcept
+{
+    return bo_rol_u16(x, n);
+}
+
+BO_CXX_API(BO_ROL_U32_CEXPR_P)
+unsigned int
+rol(unsigned int x, int n) noexcept
+{
+    return bo_rol_u32(x, n);
+}
+
+BO_CXX_API(BO_ROL_U64_CEXPR_P)
+unsigned long
+rol(unsigned long x, int n) noexcept
+{
+    return BO_ULONG_CALL(bo_rol)(x, n);
+}
+
+BO_CXX_API(BO_ROL_U64_CEXPR_P)
+unsigned long long
+rol(unsigned long long x, int n) noexcept
+{
+    return bo_rol_u64(x, n);
+}
+
+template<typename T>
+constexpr typename std::enable_if<std::is_signed<T>::value, int>::type
+rol(const T &x, int n) noexcept
+{
+    return rol(static_cast<typename std::make_unsigned<T>::type>(x), n);
+}
+
+BO_CXX_API(BO_ROR_U8_CEXPR_P)
+unsigned char
+ror(unsigned char x, int n) noexcept
+{
+    return bo_ror_u8(x, n);
+}
+
+BO_CXX_API(BO_ROR_U8_CEXPR_P)
+char
+ror(char x, int n) noexcept
+{
+    return static_cast<char>(bo_ror_u8(static_cast<unsigned char>(x), n));
+}
+
+BO_CXX_API(BO_ROR_U16_CEXPR_P)
+unsigned short
+ror(unsigned short x, int n) noexcept
+{
+    return bo_ror_u16(x, n);
+}
+
+BO_CXX_API(BO_ROR_U32_CEXPR_P)
+unsigned int
+ror(unsigned int x, int n) noexcept
+{
+    return bo_ror_u32(x, n);
+}
+
+BO_CXX_API(BO_ROR_U64_CEXPR_P)
+unsigned long
+ror(unsigned long x, int n) noexcept
+{
+    return BO_ULONG_CALL(bo_ror)(x, n);
+}
+
+BO_CXX_API(BO_ROR_U64_CEXPR_P)
+unsigned long long
+ror(unsigned long long x, int n) noexcept
+{
+    return bo_ror_u64(x, n);
+}
+
+template<typename T>
+constexpr typename std::enable_if<std::is_signed<T>::value, int>::type
+ror(const T &x, int n) noexcept
+{
+    return ror(static_cast<typename std::make_unsigned<T>::type>(x), n);
+}
+
 } // namespace bo
 
 #endif
